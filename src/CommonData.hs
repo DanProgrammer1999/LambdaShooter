@@ -24,13 +24,13 @@ data EntityType
 
 data Entity = Entity
     { entityType         :: EntityType
-    , entityPosition     :: EntityPosition
-    , entityVelocity     :: (Double, Double)
-    , entityAcceleration :: (Double, Double)
+    , entityPosition     :: Position
+    , entityVelocity     :: Velocity
+    , entityAcceleration :: Acceleration
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
-data Block = Block { position :: BlockPosition }
+data Block = Block { blockPosition :: Position }
 
 data Map = Map
     { maxWidth  :: Double
