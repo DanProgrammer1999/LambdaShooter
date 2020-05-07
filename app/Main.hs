@@ -1,10 +1,11 @@
 module Main where
 
-import Lib
+import Logic
+import Rendering
 import Graphics.Gloss
 
 simulationRate :: Integer
 simulationRate = 30
 
 main :: IO ()
-main = play FullScreen simulationRate 
+main = play FullScreen simulationRate sampleWorld renderWorld handleInput updateWorld 
