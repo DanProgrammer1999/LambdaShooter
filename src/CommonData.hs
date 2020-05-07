@@ -20,6 +20,7 @@ data Player = Player
 data EntityType
     = Laser 
     | Bullet 
+    | Player
     -- is sword entity? how would it move? 
 
 data Entity = Entity
