@@ -24,6 +24,8 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+    - gloss
 
 executables:
   shooter-exe:
@@ -35,6 +37,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - shooter
+    - gloss 
 
 tests:
   shooter-test:
