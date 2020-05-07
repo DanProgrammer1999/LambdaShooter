@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 099e56e84cf0ee715442727ac7ae187471684ca6702ba15830d6b631b2187d75
+-- hash: df35e1e4164fc2494689a8bbf0be146b390402eeec4b018336dcc92cccf8f3b5
 
 name:           shooter
 version:        0.1.0.0
@@ -27,7 +27,10 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      CommonData
+      Demo
+      Logic
+      Rendering
   other-modules:
       Paths_shooter
   hs-source-dirs:

@@ -5,26 +5,26 @@ data Weapon
     | Sword Double
     | Gun Integer 
 
-newtype Position = Position { position :: (Double, Double) }
-newtype Velocity = Velocity { velocity :: (Double, Double) }
-newtype Acceleration = Acceleration { acceleration :: (Double, Double) }
+type Position = (Double, Double)
+type Velocity = (Double, Double)
+type Acceleration = (Double, Double)
 
-data Player = Player 
-    { weapons  :: [Weapon]
-    , health   :: Double
-    , score    :: Double
-    , name     :: String
-    , body     :: Entity
+data PlayerData = PlayerData
+    { weapons       :: [Weapon]
+    , choosenWeapon :: Integer 
+    , health        :: Double
+    , score         :: Double
+    , name          :: String
     } 
 
-data EntityType
+data EntityData
     = Laser 
     | Bullet 
-    | Player
+    | Player PlayerData
     -- is sword entity? how would it move? 
 
 data Entity = Entity
-    { entityType         :: EntityType
+    { entityData         :: EntityData
     , entityPosition     :: Position
     , entityVelocity     :: Velocity
     , entityAcceleration :: Acceleration
@@ -42,6 +42,5 @@ data Map = Map
 data World = World 
     { map        :: Map
     , entities   :: [Entity]
-    , players    :: [Player]
-    , myUsername :: String
+    , myPlayer   :: Entity
     }
