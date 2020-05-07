@@ -13,6 +13,7 @@ data Player = Player
     , health   :: Double
     , score    :: Double
     , name     :: String
+    , entity   :: WorldEntity
     } 
 
 data Entity 
@@ -39,10 +40,6 @@ data Map = Map
 data World = World 
     { map        :: Map
     , entities   :: [WorldEntity]
+    , players    :: [Player]
     , myUsername :: String
     }
-
-findMyPlayer :: World -> Maybe Player
-findPlayer username (World _ entities username) = find f entities 
-    isMyPlayer :: WorldEntity -> Bool
-    
