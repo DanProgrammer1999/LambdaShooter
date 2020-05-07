@@ -10,7 +10,7 @@ renderWorld world = renderUI <> renderEntities (entities world) <> renderMap (ma
 -- search how to load our pictures
 background :: Picture
 
-renderEntities :: [WorldEntity] -> Picture
+renderEntities :: [Entity] -> Picture
 
 -- choose player picture (maybe some combination of geometric figures)
 -- add random color to players

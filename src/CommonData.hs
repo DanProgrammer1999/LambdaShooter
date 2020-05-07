@@ -5,27 +5,28 @@ data Weapon
     | Sword Double
     | Gun Integer 
 
-newtype EntityPosition = EntityPosition { entityPosition :: (Double, Double) }
-newtype BlockPosition = BlockPosition { tilePosition :: (Double, Double) }
+newtype Position = Position { position :: (Double, Double) }
+newtype Velocity = Velocity { velocity :: (Double, Double) }
+newtype Acceleration = Acceleration { acceleration :: (Double, Double) }
 
 data Player = Player 
     { weapons  :: [Weapon]
     , health   :: Double
     , score    :: Double
     , name     :: String
-    , entity   :: WorldEntity
+    , body     :: Entity
     } 
 
-data Entity 
+data EntityType
     = Laser 
     | Bullet 
     -- is sword entity? how would it move? 
 
-data WorldEntity = WorldEntity
-    { entity       :: Entity
-    , position     :: EntityPosition
-    , speed        :: (Double, Double)
-    , acceleration :: (Double, Double)
+data Entity = Entity
+    { entityType         :: EntityType
+    , entityPosition     :: EntityPosition
+    , entityVelocity     :: (Double, Double)
+    , entityAcceleration :: (Double, Double)
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
@@ -39,7 +40,7 @@ data Map = Map
 
 data World = World 
     { map        :: Map
-    , entities   :: [WorldEntity]
+    , entities   :: [Entity]
     , players    :: [Player]
     , myUsername :: String
     }
