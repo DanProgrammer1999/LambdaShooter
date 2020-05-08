@@ -1,46 +1,58 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module CommonData where
 
-data Weapon 
+import Graphics.Gloss.Data.Point
+import Control.Lens
+
+data Weapon
     = Blaster Double
     | Sword Double
-    | Gun Integer 
+    | Gun Integer
 
-type Position = (Double, Double)
-type Velocity = (Double, Double)
-type Acceleration = (Double, Double)
+type Position = Point
+type Velocity = Point
+type Acceleration = Point
 
 data PlayerData = PlayerData
-    { weapons       :: [Weapon]
-    , choosenWeapon :: Integer 
-    , health        :: Double
-    , score         :: Double
-    , name          :: String
-    } 
+    { _weapons       :: [Weapon]
+    , _choosenWeapon :: Integer
+    , _health        :: Double
+    , _score         :: Double
+    , _name          :: String
+    }
 
 data EntityData
-    = Laser 
-    | Bullet 
-    | Player PlayerData
+    = Laser
+    | Bullet
+    | Player {_playerData :: PlayerData}
     -- is sword entity? how would it move? 
 
 data Entity = Entity
-    { entityData         :: EntityData
-    , entityPosition     :: Position
-    , entityVelocity     :: Velocity
-    , entityAcceleration :: Acceleration
+    { _entityData         :: EntityData
+    , _entityPosition     :: Position
+    , _entityVelocity     :: Velocity
+    , _entityAcceleration :: Acceleration
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
-data Block = Block { blockPosition :: Position }
+data Block = Block { _blockPosition :: Position }
 
 data Map = Map
-    { maxWidth  :: Double
-    , maxHeight :: Double
-    , tiles     :: [Block]
+    { _maxWidth  :: Double
+    , _maxHeight :: Double
+    , _tiles     :: [Block]
     }
 
-data World = World 
-    { map        :: Map
-    , entities   :: [Entity]
-    , myPlayer   :: Entity
+data World = World
+    { _worldMap   :: Map
+    , _entities   :: [Entity]
+    , _myPlayer   :: Entity
     }
+
+makeLenses ''PlayerData
+makeLenses ''EntityData
+makeLenses ''Entity
+makeLenses ''Map
+makeLenses ''Block
+makeLenses ''World

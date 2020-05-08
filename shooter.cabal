@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: df35e1e4164fc2494689a8bbf0be146b390402eeec4b018336dcc92cccf8f3b5
+-- hash: 99a4ed4ae185d95f9f6320b906ed510863dbc892bae8b754bd920d10c93b2dce
 
 name:           shooter
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
   build-depends:
       base >=4.7 && <5
     , gloss
+    , lens
   default-language: Haskell2010
 
 executable shooter-exe
