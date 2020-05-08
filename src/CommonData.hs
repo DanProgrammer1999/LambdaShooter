@@ -3,9 +3,10 @@
 module CommonData where
 
 import Graphics.Gloss.Data.Point
+import Graphics.Gloss.Data.Picture
 import Control.Lens
 
-data Weapon
+data Weapon 
     = Blaster Double
     | Sword Double
     | Gun Integer
@@ -29,7 +30,8 @@ data EntityData
     -- is sword entity? how would it move? 
 
 data Entity = Entity
-    { _entityData         :: EntityData
+    { _texture            :: Picture
+    , _entityData         :: EntityData
     , _entityPosition     :: Position
     , _entityVelocity     :: Velocity
     , _entityAcceleration :: Acceleration
@@ -39,9 +41,10 @@ data Entity = Entity
 data Block = Block { _blockPosition :: Position }
 
 data Map = Map
-    { _maxWidth  :: Double
-    , _maxHeight :: Double
-    , _tiles     :: [Block]
+    { _background :: Picture
+    , _maxWidth   :: Double
+    , _maxHeight  :: Double
+    , _tiles      :: [Block]
     }
 
 data World = World

@@ -1,17 +1,10 @@
-module Demo (sampleWorld) where
+module Demo  where
 
 import CommonData
+import Graphics.Gloss
 
-sampleWorld :: World
-sampleWorld = World sampleMap [] samplePlayer
-
-sampleMap :: Map
-sampleMap = _map
-
-sampleUsername :: String
-sampleUsername = "DanielDv99"
-
-samplePlayer :: Entity
-samplePlayer = Entity (Player playerData) (0, 0) (0, 0) (0, 0)
-    where
-        playerData = PlayerData [] 0 100 0 sampleUsername
+sampleWorld ::  World
+sampleWorld  = World
+ (Map (color green $ circleSolid 100) 200 300 [])
+ []
+ (PlayerData [] 0 100 0 "Alex")

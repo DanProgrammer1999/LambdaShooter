@@ -3,9 +3,14 @@ module Main where
 import Logic
 import Rendering
 import Graphics.Gloss
+import CommonData
+import Textures
 
-simulationRate :: Integer
+simulationRate :: Int
 simulationRate = 30
 
 main :: IO ()
-main = play FullScreen simulationRate sampleWorld renderWorld handleInput updateWorld 
+main = do
+     textures <- map loadTexture texturesNames
+     ()
+    --  play FullScreen white simulationRate sampleWorld renderWorld handleInput updateWorld 
