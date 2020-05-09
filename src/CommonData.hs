@@ -3,9 +3,10 @@
 module CommonData where
 
 import Graphics.Gloss.Data.Point
+import Graphics.Gloss.Data.Picture
 import Control.Lens
 
-data Weapon
+data Weapon 
     = Blaster Double
     | Sword Double
     | Gun Integer
@@ -42,9 +43,10 @@ data Body = Body
 data Block = Block { _blockPosition :: Position }
 
 data Map = Map
-    { _maxWidth  :: Double
-    , _maxHeight :: Double
-    , _tiles     :: [Block]
+    { _background :: Picture
+    , _maxWidth   :: Double
+    , _maxHeight  :: Double
+    , _tiles      :: [Block]
     }
 
 data World = World
