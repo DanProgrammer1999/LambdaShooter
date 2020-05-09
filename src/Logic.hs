@@ -8,14 +8,6 @@ import Data.Maybe
 import CommonData
 import Constants
 
-data Direction
-    = Left
-    | Right
-
-data Action
-    = Move Direction
-    | Jump
-
 -- Receive events and update the world
 handleInput :: Event -> World -> World
 handleInput (EventKey (Char c) Down _ _) world = newWorld
@@ -48,11 +40,11 @@ makeJump player = player &~
 -- Update entities parameters (position, velocity, acceleration) based on time passed
 -- Gravity calculations and collision detection is also here
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = _todo
+updateWorld timePassed world = world
     where 
         gravity_acceleration body = body ^. weight * g
         
         -- updateBody body = 
 
-tryMove :: World -> Entity -> (Position) -> Either Entity Entity
-tryMove = _todo
+tryMove :: World -> Entity -> Position -> Either Entity Entity
+tryMove world entity (x, y) = Right entity 

@@ -18,14 +18,17 @@ renderWorld world
 -- In case we want to see collision (for DEBUG purposes only)
 -- we need to draw them additionaly here 
 renderEntities :: [Entity] -> Picture
-renderEntities entities = foldr (<>) Blank pictures  where
-    pictures :: [Picture]
-    pictures = map _entityTexture entities
+renderEntities entities = mconcat pictures 
+    where
+        pictures = map (view entityTexture) entities
 
 renderMap :: Map -> Picture
-renderMap m = foldr (<>) (_background m) blocks where
-    blocks = map (\b ->
-         uncurry translate (b ^. blockPosition) (b ^. blockTexture)) (_tiles m)
+renderMap m = (m ^. background) <> mconcat blocks 
+    where
+        blocks = map renderBlock (m ^. tiles)
+
+renderBlock :: Block -> Picture
+renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
 
 -- TODO
 renderUI :: EntityData -> Picture

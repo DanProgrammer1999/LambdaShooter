@@ -40,6 +40,7 @@ executables:
     dependencies:
     - shooter
     - gloss 
+    - gloss-juicy
 
 tests:
   shooter-test:
