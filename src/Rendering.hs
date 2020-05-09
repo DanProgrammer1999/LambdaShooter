@@ -9,21 +9,24 @@ import Textures
 -- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
 renderWorld world 
-    =  renderUI (world ^. myPlayer . playerData)
-    <> renderBodies allBodies 
-    <> renderMap (world ^. worldMap)  
-    <> background
+    =  renderMap (world ^. worldMap)
+    <> renderEntities allEntities 
+    <> renderUI (world ^. myPlayer . entityData)
     where
-        allBodies = world ^. entities ++ allPlayers
-        allPlayers = (world ^. myPlayer . playerBody) : (map (view playerBody) (world ^. players))
+        allEntities = world ^. myPlayer : world ^. entities  
 
-renderBodies :: [Body] -> Picture
-renderBodies entities = foldr (<>) Blank pictures  where
+-- In case we want to see collision (for DEBUG purposes only)
+-- we need to draw them additionaly here 
+renderEntities :: [Entity] -> Picture
+renderEntities entities = foldr (<>) Blank pictures  where
     pictures :: [Picture]
-    pictures = map texture entities
+    pictures = map _entityTexture entities
 
 renderMap :: Map -> Picture
-renderMap m = color black $ circleSolid 110
+renderMap m = foldr (<>) (_background m) blocks where
+    blocks = map (\b ->
+         uncurry translate (b ^. blockPosition) (b ^. blockTexture)) (_tiles m)
 
-renderUI :: PlayerData -> Picture
+-- TODO
+renderUI :: EntityData -> Picture
 renderUI pd = color blue $ circleSolid 15

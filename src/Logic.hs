@@ -28,6 +28,8 @@ handleInput (EventKey (Char c) Down _ _) world = newWorld
                 'd' -> world & positionLens . _1 +~ movementSpeed
                 ' ' -> world & myPlayer .~ makeJump (world ^. myPlayer)
                 _   -> world
+                
+handleInput _ world = world
 
 makeJump :: Entity -> Entity
 makeJump player = player &~

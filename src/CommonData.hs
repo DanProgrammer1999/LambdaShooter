@@ -57,13 +57,13 @@ data EntityData
 data Entity
     = Entity
     { _entityBody    :: Body
-    , _entityTexture :: TextureName
+    , _entityTexture :: Picture
     , _entityData    :: EntityData
     }
 
 data Block = Block
     { _blockPosition :: Position
-    , _blockTexture  :: TextureName
+    , _blockTexture  :: Picture
     }
 
 data Map = Map
