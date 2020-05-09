@@ -28,6 +28,8 @@ handleInput (EventKey (Char c) Down _ _) world = newWorld
                 'd' -> world & positionLens . _1 +~ movementSpeed
                 ' ' -> world & myPlayer .~ makeJump (world ^. myPlayer)
                 _   -> world
+                
+handleInput _ world = world
 
 makeJump :: Entity -> Entity
 makeJump player = player &~
@@ -46,4 +48,4 @@ makeJump player = player &~
 -- Update entities parameters (position, velocity, acceleration) based on time passed
 -- Gravity calculations and collision detection is also here
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = _todo
+updateWorld timePassed world = world

@@ -9,33 +9,27 @@ import Graphics.Gloss.Juicy
 type TextureName = String
 
 textureNames :: [TextureName]
-textureNames = [backgroundName, foregroundName, heroName]
+textureNames = [backgroundName, playerName]
 
 backgroundName :: TextureName
-backgroundName = "game.png"
+backgroundName = "resources/background.png"
 
 backgroundTexture :: [(TextureName, Picture)] -> Maybe Picture
 backgroundTexture = lookup backgroundName
 
-foregroundName :: TextureName
-foregroundName = "particles.png"
+playerName :: TextureName
+playerName = "resources/terrorist_1/idle/1_terrorist_1_Idle_000.png"
 
-foregroundTexture :: [(TextureName, Picture)] -> Maybe Picture
-foregroundTexture = lookup foregroundName
-
-heroName :: TextureName
-heroName = "hero.png"
-
-heroTexture :: [(TextureName, Picture)] -> Maybe Picture
-heroTexture = lookup heroName
-
+playerTexture :: [(TextureName, Picture)] -> Maybe Picture
+playerTexture = lookup playerName
 
 loadTexture :: TextureName -> IO Picture 
 loadTexture textureName = do 
-    pic <- loadJuicyPNG ("resources/" ++ textureName)
+    pic <- loadJuicyPNG textureName
     case pic of
         Just pic -> return pic
         Nothing -> do
+            -- maybe we need to stop execution if smth goes wrong
              let errorMsg = "Texture \"" ++ textureName ++ "\" was not found."
              print errorMsg
              return blank
