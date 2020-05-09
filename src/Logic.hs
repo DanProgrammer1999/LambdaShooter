@@ -20,23 +20,28 @@ data Action
 handleInput :: Event -> World -> World
 handleInput (EventKey (Char c) Down _ _) world = newWorld
     where
-        positionLens = myPlayer . playerBody . bodyPosition
-
-        hasPlayerJumped = world ^. myPlayer . playerData . hasJumped 
-        availableJumpHeight = 
-            if not hasPlayerJumped 
-            then jumpHeight 
-            else 0
+        positionLens = myPlayer . entityBody . bodyPosition
 
         newWorld =
             case c of
                 'a' -> world & positionLens . _1 -~ movementSpeed
                 'd' -> world & positionLens . _1 +~ movementSpeed
-                ' ' -> 
-                    world &~ do 
-                        myPlayer . playerData . hasJumped .= True
-                        positionLens . _2 += availableJumpHeight
+                ' ' -> world & myPlayer .~ makeJump (world ^. myPlayer)
                 _   -> world
+
+makeJump :: Entity -> Entity
+makeJump player = player &~
+    do
+        entityData . hasJumped .= True 
+        entityBody . bodyPosition . _2 += availableJumpHeight
+    where 
+        hasPlayerJumped = fromMaybe True (player ^? entityData . hasJumped)
+        availableJumpHeight = 
+            if not hasPlayerJumped 
+            then jumpHeight 
+            else 0
+        
+
 
 -- Update entities parameters (position, velocity, acceleration) based on time passed
 -- Gravity calculations and collision detection is also here
