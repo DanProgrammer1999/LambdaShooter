@@ -30,8 +30,12 @@ type Velocity = Point
 type Acceleration = Point
 
 data CollisionBox
-    = Rectangle {_width :: Float, _height :: Float}
-    | Circle    {_radius :: Float }
+    = RectangleBox 
+        { _width  :: Float
+        , _height :: Float
+        }
+    | CircleBox    
+        {_radius :: Float }
 
 data Body = Body
     { _bodyPosition     :: Position
@@ -101,3 +105,9 @@ isPlayer entity
     | otherwise = False 
     where 
         testLens = entityData . name
+
+addPoints :: Point -> Point -> Point
+addPoints (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+
+distance :: Point -> Point -> Float
+distance (x1, y1) (x2, y2) = sqrt $ (x1 - x2)^2 + (y1 - y2)^2

@@ -12,4 +12,4 @@ samplePlayer :: Picture -> Entity
 samplePlayer playerTexture =
      Entity playerBody playerTexture playerData  where
         playerData = PlayerData [] 0 100.0 0 "Alex" False
-        playerBody = Body (0,0) (0,0) 10.0 (0, 0) (Rectangle 10.0 20.0)
+        playerBody = Body (0,0) (0,0) 10.0 (0, 0) (RectangleBox 10.0 20.0)

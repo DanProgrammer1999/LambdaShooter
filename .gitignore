@@ -3,3 +3,4 @@
 .idea
 shooter.iml
 *.cabal
+.vscode
