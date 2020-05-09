@@ -5,33 +5,34 @@ module CommonData where
 import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
 import Control.Lens
+import Data.Maybe
 
 import Textures
 
-data Weapon 
-    = ShootingWeapon 
+data Weapon
+    = ShootingWeapon
         { _shootingWeaponTexture :: TextureName
         , _shootingPower         :: Float
         }
-    | ColdWeapon     
+    | ColdWeapon
         { _coldWeaponTexture :: TextureName
         , _cutPower          :: Float
-        , _cutRadius         :: Float 
+        , _cutRadius         :: Float
         }
-    | WaveWeapon 
+    | WaveWeapon
         { _waveWeaponTexture :: TextureName
         , _wavePower         :: Float
-        , _waveHitRadius     :: Float 
+        , _waveHitRadius     :: Float
         }
 
 type Position = Point
 type Velocity = Point
 type Acceleration = Point
 
-data CollisionBox 
+data CollisionBox
     = Rectangle {_width :: Float, _height :: Float}
     | Circle    {_radius :: Float }
-    
+
 data Body = Body
     { _bodyPosition     :: Position
     , _bodyVelocity     :: Velocity
@@ -41,7 +42,7 @@ data Body = Body
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
-data EntityData 
+data EntityData
     = PlayerData
     { _weapons       :: [Weapon]
     , _choosenWeapon :: Integer
@@ -53,14 +54,14 @@ data EntityData
     | ProjectileData
     { _projectilePower :: Float }
 
-data Entity 
-    = Entity 
+data Entity
+    = Entity
     { _entityBody    :: Body
     , _entityTexture :: TextureName
     , _entityData    :: EntityData
-    } 
+    }
 
-data Block = Block 
+data Block = Block
     { _blockPosition :: Position
     , _blockTexture  :: TextureName
     }
@@ -86,3 +87,17 @@ makeLenses ''Entity
 makeLenses ''Block
 makeLenses ''Map
 makeLenses ''World
+
+isProjectile :: Entity -> Bool
+isProjectile entity
+    | isJust $ entity ^? testLens = True
+    | otherwise                   = False 
+    where
+        testLens = entityData . projectilePower
+
+isPlayer :: Entity -> Bool
+isPlayer entity
+    | isJust $ entity ^? testLens = True
+    | otherwise = False 
+    where 
+        testLens = entityData . name

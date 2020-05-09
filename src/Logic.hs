@@ -47,3 +47,10 @@ makeJump player = player &~
 -- Gravity calculations and collision detection is also here
 updateWorld :: Float -> World -> World
 updateWorld timePassed world = _todo
+    where 
+        gravity_acceleration body = body ^. weight * g
+        
+        -- updateBody body = 
+
+tryMove :: World -> Entity -> (Position) -> Either Entity Entity
+tryMove = _todo
