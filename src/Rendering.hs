@@ -1,21 +1,24 @@
 module Rendering (renderWorld) where
 
 import Graphics.Gloss
+import Control.Lens
+
 import CommonData
 import Textures
 
 -- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
 renderWorld world 
-    =  renderEntities allBodies 
-    <> renderMap (world ^. worldMap) 
-    <> (background . world ^. worldMap) 
+    =  renderUI (world ^. myPlayer . playerData)
+    <> renderBodies allBodies 
+    <> renderMap (world ^. worldMap)  
+    <> background
     where
         allBodies = world ^. entities ++ allPlayers
         allPlayers = (world ^. myPlayer . playerBody) : (map (view playerBody) (world ^. players))
 
 renderBodies :: [Body] -> Picture
-renderEntities entities = foldr (<>) Blank pictures  where
+renderBodies entities = foldr (<>) Blank pictures  where
     pictures :: [Picture]
     pictures = map texture entities
 
