@@ -5,6 +5,7 @@ import Rendering
 import Graphics.Gloss
 import CommonData
 import Textures
+import Demo
 
 simulationRate :: Int
 simulationRate = 30
@@ -12,5 +13,6 @@ simulationRate = 30
 main :: IO ()
 main = do
      textures <- map loadTexture texturesNames
-     ()
-    --  play FullScreen white simulationRate sampleWorld renderWorld handleInput updateWorld 
+     let table = zip texturesNames textures
+
+     play FullScreen white simulationRate sampleWorld renderWorld handleInput updateWorld 

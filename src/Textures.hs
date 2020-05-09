@@ -8,8 +8,8 @@ import Graphics.Gloss.Juicy
 -- Texture is the same as sprite in this project.
 type TextureName = String
 
-kek :: TextureName
-kek = backgroundName ++ "kek"
+textureNames :: [TextureName]
+textureNames = [backgroundName, foregroundName, heroName]
 
 backgroundName :: TextureName
 backgroundName = "game.png"
@@ -29,8 +29,6 @@ heroName = "hero.png"
 heroTexture :: [(TextureName, Picture)] -> Maybe Picture
 heroTexture = lookup heroName
 
-textureNames :: [TextureName]
-textureNames = [backgroundName, foregroundName]
 
 loadTexture :: TextureName -> IO Picture 
 loadTexture textureName = do 

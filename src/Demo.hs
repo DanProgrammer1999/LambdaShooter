@@ -3,8 +3,9 @@ module Demo  where
 import CommonData
 import Graphics.Gloss
 
-sampleWorld ::  World
-sampleWorld  = World
- (Map (color green $ circleSolid 100) 200 300 [])
+sampleWorld :: Picture -> Picture -> World
+sampleWorld background playerTexture = World
+ (Map background 200 300 [])
  []
- (PlayerData [] 0 100 0 "Alex")
+ (Entity playerTexture (Player playerData) (0,0) (0,0) (0,0)) where
+     playerData = PlayerData [] 0 100 0 "Alex"
