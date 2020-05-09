@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 99a4ed4ae185d95f9f6320b906ed510863dbc892bae8b754bd920d10c93b2dce
+-- hash: eef2c3a6eac9fcb9c8df203c217509a379e18454cd60fad9e4141079d672a8c9
 
 name:           shooter
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       CommonData
+      Constants
       Demo
       Logic
       Rendering

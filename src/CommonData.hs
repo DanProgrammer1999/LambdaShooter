@@ -20,19 +20,22 @@ data PlayerData = PlayerData
     , _health        :: Double
     , _score         :: Double
     , _name          :: String
+    , _hasJumped     :: Bool
     }
 
-data EntityData
-    = Laser
-    | Bullet
-    | Player {_playerData :: PlayerData}
-    -- is sword entity? how would it move? 
+data Entity
+    = Laser  { _laserBody  :: Body }
+    | Bullet { _bulletBody :: Body }
 
-data Entity = Entity
-    { _entityData         :: EntityData
-    , _entityPosition     :: Position
-    , _entityVelocity     :: Velocity
-    , _entityAcceleration :: Acceleration
+data Player = Player
+    { _playerBody :: Body
+    , _playerData :: PlayerData
+    }
+
+data Body = Body
+    { _bodyPosition     :: Position
+    , _bodyVelocity     :: Velocity
+    , _bodyAcceleration :: Acceleration
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
@@ -47,11 +50,13 @@ data Map = Map
 data World = World
     { _worldMap   :: Map
     , _entities   :: [Entity]
-    , _myPlayer   :: Entity
+    , _players    :: [Player]
+    , _myPlayer   :: Player
     }
 
 makeLenses ''PlayerData
-makeLenses ''EntityData
+makeLenses ''Body
+makeLenses ''Player
 makeLenses ''Entity
 makeLenses ''Map
 makeLenses ''Block

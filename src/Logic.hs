@@ -1,9 +1,14 @@
-module Logic (handleInput, updateWorld) where 
+module Logic (handleInput, updateWorld) where
 
 import Graphics.Gloss
-import CommonData
+import Graphics.Gloss.Interface.Pure.Game
+import Control.Lens
+import Data.Maybe
 
-data Direction 
+import CommonData
+import Constants
+
+data Direction
     = Left
     | Right
 
@@ -12,12 +17,28 @@ data Action
     | Jump
 
 -- Receive events and update the world
--- Example at https://mmhaskell.com/blog/2019/3/25/making-a-glossy-game-part-1
 handleInput :: Event -> World -> World
-handleInput (EventKey (Char 'a') Down _ _) world = _todo
+handleInput (EventKey (Char c) Down _ _) world = newWorld
+    where
+        positionLens = myPlayer . playerBody . bodyPosition
 
+        hasPlayerJumped = world ^. myPlayer . playerData . hasJumped 
+        availableJumpHeight = 
+            if not hasPlayerJumped 
+            then jumpHeight 
+            else 0
+
+        newWorld =
+            case c of
+                'a' -> world & positionLens . _1 -~ movementSpeed
+                'd' -> world & positionLens . _1 +~ movementSpeed
+                ' ' -> 
+                    world &~ do 
+                        myPlayer . playerData . hasJumped .= True
+                        positionLens . _2 += availableJumpHeight
+                _   -> world
 
 -- Update entities parameters (position, velocity, acceleration) based on time passed
 -- Gravity calculations and collision detection is also here
 updateWorld :: Float -> World -> World
-update timePassed world = _todo
+updateWorld timePassed world = _todo
