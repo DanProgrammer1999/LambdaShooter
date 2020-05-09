@@ -6,12 +6,15 @@ import Textures
 
 -- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
-renderWorld world = 
- renderEntities (entities world) <> 
- renderMap (worldMap world) <> (background . worldMap world) where
-     allEntities = entities world ++ Entity (Player . myPlayer world) (EntityData (0,0) (0,0) (0,0))
+renderWorld world 
+    =  renderEntities allBodies 
+    <> renderMap (world ^. worldMap) 
+    <> (background . world ^. worldMap) 
+    where
+        allBodies = world ^. entities ++ allPlayers
+        allPlayers = (world ^. myPlayer . playerBody) : (map (view playerBody) (world ^. players))
 
-renderEntities :: [Entity] -> Picture
+renderBodies :: [Body] -> Picture
 renderEntities entities = foldr (<>) Blank pictures  where
     pictures :: [Picture]
     pictures = map texture entities

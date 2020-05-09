@@ -1,14 +1,11 @@
 cabal-version: 1.12
 
-<<<<<<< HEAD
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
 -- hash: eef2c3a6eac9fcb9c8df203c217509a379e18454cd60fad9e4141079d672a8c9
 
-=======
->>>>>>> 66eea021c9c41b60b568ec0543d5fa1a76d3722c
 name:           shooter
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/Github username here/shooter#readme>
