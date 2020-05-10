@@ -5,7 +5,7 @@ import Control.Lens
 
 import CommonData
 import Animation
-import Prelude hiding (Left, Right)
+import Prelude hiding (Left, Right, flip)
 
 -- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
@@ -26,16 +26,17 @@ renderEntities entities = mconcat pictures  where
 
 -- ^ Render all Entities and translates and flip accordingly. 
 entityToPicture :: Entity -> Picture
-entityToPicture entity = rightPic where
-    rightPic = if isPlayer entity
+entityToPicture entity = pic3 where
+    pic1 = if isPlayer entity
         then playerPic
         else entity ^. entityTexture
-    -- ^ Flip if Direction == Left.
-    -- pic = if (entity ^. entityData . direction) == Left
-    --     then flip rightPic
-    --     else rightPic
-    -- ^ Change flip to REALLY flip.
-    flip = id
+
+    pic2 = if (entity ^. direction) == Left
+        then flip pic1 
+        else pic1
+
+    pic3 = uncurry translate (entity ^. entityBody . bodyPosition) pic2
+
     animation = getAnimationFromEntity entity
     playerPic = case animation of
         Just a -> 
@@ -58,3 +59,7 @@ renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
 -- TODO
 renderUI :: EntityData -> Picture
 renderUI pd = color blue $ circleSolid 15
+
+-- ^ Flips picture. 
+flip :: Picture -> Picture
+flip  = id

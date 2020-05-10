@@ -57,7 +57,6 @@ data EntityData
     , _name          :: String
     , _hasJumped     :: Bool -- ^ Should be deleted, we have currentState now
     , _currentState  :: PlayerState
-    , _direction     :: Direction
     , _animations    :: [(PlayerState, Animation)]
     }
     | ProjectileData
@@ -68,6 +67,7 @@ data Entity
     { _entityBody    :: Body
     , _entityTexture :: Picture -- ^ unused (Blank) for players.
     , _entityData    :: EntityData
+    , _direction     :: Direction
     }
 
 data Block = Block

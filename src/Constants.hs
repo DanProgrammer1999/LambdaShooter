@@ -1,7 +1,7 @@
 module Constants where
 
 movementSpeed :: Float
-movementSpeed = 1.0
+movementSpeed = 1000
 
 jumpHeight :: Float
 jumpHeight = 2.0
