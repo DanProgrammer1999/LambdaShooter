@@ -10,10 +10,9 @@ import Textures
 renderWorld :: World -> Picture
 renderWorld world 
     =  renderMap (world ^. worldMap)
-    <> renderEntities allEntities 
-    <> renderUI (world ^. myPlayer . entityData)
-    where
-        allEntities = world ^. myPlayer : world ^. entities  
+    <> renderEntities (world ^. entities)
+    <> renderPlayers (world ^. myPlayer)
+    <> renderUI (world ^. myPlayer . entityData)  
 
 -- In case we want to see collision (for DEBUG purposes only)
 -- we need to draw them additionaly here 
@@ -21,6 +20,10 @@ renderEntities :: [Entity] -> Picture
 renderEntities entities = mconcat pictures 
     where
         pictures = map (view entityTexture) entities
+
+renderPlayers :: [Entity] -> Picture
+renderPlayer players = pic where
+    pic = 
 
 renderMap :: Map -> Picture
 renderMap m = (m ^. background) <> mconcat blocks 

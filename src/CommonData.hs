@@ -6,6 +6,7 @@ import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
 import Control.Lens
 import Data.Maybe
+import Animation
 
 import Textures
 
@@ -46,6 +47,9 @@ data Body = Body
     -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
+data PlayerState = Idle | Running | Jumping | Falling deriving Eq 
+data Direction =  Left | Right deriving Eq
+
 data EntityData
     = PlayerData
     { _weapons       :: [Weapon]
@@ -54,6 +58,9 @@ data EntityData
     , _score         :: Float
     , _name          :: String
     , _hasJumped     :: Bool
+    , _currentState  :: PlayerState
+    , _direction     :: Direction
+    , _animations    :: [(PlayerState, Animation)]
     }
     | ProjectileData
     { _projectilePower :: Float }
@@ -61,7 +68,7 @@ data EntityData
 data Entity
     = Entity
     { _entityBody    :: Body
-    , _entityTexture :: Picture
+    , _entityTexture :: Picture -- ^ unused for players.
     , _entityData    :: EntityData
     }
 
