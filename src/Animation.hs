@@ -5,6 +5,10 @@ import Graphics.Gloss
 import Graphics.Gloss.Juicy
 import Control.Lens
 import System.Directory (getDirectoryContents)
+import Constants
+import Data.Bifunctor
+data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
+data Direction =  Left | Right deriving (Eq, Show)
 
 defaultFrameDelay :: Float
 defaultFrameDelay = 0.15
@@ -57,3 +61,30 @@ loadPicture filepath = do
             print errorMsg
             return blank
 
+scaleAnimation :: Float  -> Animation -> Animation
+scaleAnimation scaleFactor anima = anima {
+    _frames = map (scale scaleFactor scaleFactor) (anima ^. frames)
+}  
+
+loadPlayerAnimations :: IO [(PlayerState, Animation)]
+loadPlayerAnimations = do
+    putStrLn "Loading player animations..."
+    let stateAnimations =
+         map (Data.Bifunctor.second loadAnimation) allTerroristAnimationPathes
+    let states = map fst stateAnimations
+    anims <- mapM snd stateAnimations
+    let animationTable = zip states anims
+    putStrLn "Player animations are loaded!"
+    return animationTable
+
+allTerroristAnimationPathes :: [(PlayerState, FilePath)]
+allTerroristAnimationPathes = [
+    (Idle, terroristIdlePath),
+    (Running, terroristRunPath),
+    (Dying, terroristDeathPath),
+    (Jumping, terroristJumpPath),
+    (Falling, terroristFallPath)
+    ]
+
+loadBlankAnimation :: IO Animation
+loadBlankAnimation = loadAnimation blankAnimationPath

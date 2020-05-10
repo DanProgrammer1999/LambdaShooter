@@ -45,9 +45,6 @@ data Body = Body
     , _bodyCollisionBox :: CollisionBox
     }
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
-data Direction =  Left | Right deriving (Eq, Show)
-
 data EntityData
     = PlayerData
     { _weapons       :: [Weapon]

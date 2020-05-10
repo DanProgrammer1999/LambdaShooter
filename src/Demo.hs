@@ -3,7 +3,7 @@ module Demo  where
 import Graphics.Gloss hiding (Rectangle)
 import Prelude hiding (Left, Right)
 
-import Animation (Animation)
+import Animation 
 import CommonData
 
 sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
