@@ -28,6 +28,7 @@ library:
     - gloss
     - gloss-juicy
     - lens
+    - directory
 
 executables:
   shooter-exe:
@@ -41,6 +42,8 @@ executables:
     - shooter
     - gloss 
     - gloss-juicy
+    - directory
+    - lens
 
 tests:
   shooter-test:

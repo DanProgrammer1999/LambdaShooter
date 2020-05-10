@@ -1,15 +1,18 @@
 module Demo  where
 
-import CommonData
 import Graphics.Gloss hiding (Rectangle)
+import Prelude hiding (Left, Right)
 
-sampleWorld :: Picture -> Picture -> World
-sampleWorld background playerTexture = World
- (Map background 200 300 []) [] (samplePlayer playerTexture)
+import Animation (Animation)
+import CommonData
+
+sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
+sampleWorld background animationTable = World
+ (Map background 200 300 []) [] (samplePlayer animationTable)
      
 
-samplePlayer :: Picture -> Entity
-samplePlayer playerTexture =
-     Entity playerBody playerTexture playerData  where
-        playerData = PlayerData [] 0 100.0 0 "Alex" False
+samplePlayer :: [(PlayerState, Animation)] -> Entity
+samplePlayer animationTable =
+     Entity playerBody Blank playerData  where
+        playerData = PlayerData [] 0 100.0 0 "Alex" False Idle Right animationTable 
         playerBody = Body (0,0) (0,0) 10.0 (0, 0) (RectangleBox 10.0 20.0)

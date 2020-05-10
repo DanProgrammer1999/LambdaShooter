@@ -6,22 +6,21 @@ import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
 import Control.Lens
 import Data.Maybe
-import Animation
 
-import Textures
+import Animation
 
 data Weapon
     = ShootingWeapon
-        { _shootingWeaponTexture :: TextureName
+        { _shootingWeaponTexture :: Picture
         , _shootingPower         :: Float
         }
     | ColdWeapon
-        { _coldWeaponTexture :: TextureName
+        { _coldWeaponTexture :: Picture
         , _cutPower          :: Float
         , _cutRadius         :: Float
         }
     | WaveWeapon
-        { _waveWeaponTexture :: TextureName
+        { _waveWeaponTexture :: Picture
         , _wavePower         :: Float
         , _waveHitRadius     :: Float
         }
@@ -44,11 +43,10 @@ data Body = Body
     , _weight           :: Float
     , _bodyAcceleration :: Acceleration
     , _bodyCollisionBox :: CollisionBox
-    -- do we need rotation, rotationSpeed and rotationAcceleration (and maybe pivotPoint)?
     }
 
-data PlayerState = Idle | Running | Jumping | Falling deriving Eq 
-data Direction =  Left | Right deriving Eq
+data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
+data Direction =  Left | Right deriving (Eq, Show)
 
 data EntityData
     = PlayerData
@@ -57,7 +55,7 @@ data EntityData
     , _health        :: Float
     , _score         :: Float
     , _name          :: String
-    , _hasJumped     :: Bool
+    , _hasJumped     :: Bool -- ^ Should be deleted, we have currentState now
     , _currentState  :: PlayerState
     , _direction     :: Direction
     , _animations    :: [(PlayerState, Animation)]
@@ -68,7 +66,7 @@ data EntityData
 data Entity
     = Entity
     { _entityBody    :: Body
-    , _entityTexture :: Picture -- ^ unused for players.
+    , _entityTexture :: Picture -- ^ unused (Blank) for players.
     , _entityData    :: EntityData
     }
 
@@ -120,3 +118,10 @@ addPoints (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt $ (x1 - x2)^2 + (y1 - y2)^2
+ 
+-- ^ Returns the right animation from the entitie's animation table
+getAnimationFromEntity :: Entity -> Maybe Animation
+getAnimationFromEntity entity = animation where
+    animationTable = entity ^. entityData . animations
+    state = _currentState (entity ^. entityData)
+    animation = lookup state animationTable

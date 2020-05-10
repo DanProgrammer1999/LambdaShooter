@@ -8,8 +8,9 @@ import Data.Either
 
 import CommonData
 import Constants
+import Animation
 
--- Receive events and update the world
+-- ^ Receive events and update the world
 handleInput :: Event -> World -> World
 handleInput (EventKey (Char c) Down _ _) world = newWorld
     where
@@ -38,25 +39,47 @@ makeJump player = player &~
 
 
 
--- Update entities parameters (position, velocity, acceleration) based on time passed
--- Gravity calculations and collision detection is also here
+-- ^ Update entities parameters (position, velocity, acceleration) based on time passed
+-- ^ Gravity calculations and collision detection is also here
+-- ^ Note: first update events, physics, then animation
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = world
-    where
+updateWorld timePassed world = newWorld
+    where 
         gravity_acceleration body = body ^. weight * g
+        
+        newWorld = world { _myPlayer = updateEntity  (_myPlayer world)}
 
-        updateEntity entity
+        
+        updateEntity :: Entity -> Entity
+        updateEntity entity 
             = entity &~ do
-                -- entityBody . bodyPosition .= newPosition 
+                entityBody . bodyPosition .= newPosition 
                 entityBody . bodyVelocity %= addPoints oldAcceleration
 
-            where
-                oldPosition = entity ^. entityBody . bodyPosition
+                entityData . animations .= newPlayerTable
+            where 
+                oldPosition = entity ^. entityBody . bodyPosition 
                 oldVelocity = entity ^. entityBody . bodyVelocity
                 oldAcceleration = entity ^. entityBody . bodyAcceleration
+                -- ^ TODO Change newPosition. Made just for compilation  
+                newPosition = oldPosition 
+                
 
--- | Calculate if the movement would cause collision
--- | If it does, return the point to which the body can move, and the entity with which the body collided
+                -- ^ All code below should be applied to players only
+
+                -- ^ Update Animation should be done for all players
+                curState = _currentState (entity ^. entityData) 
+                -- ^ Calculate new Animation
+                oldPlayerAnimation = fromJust $ getAnimationFromEntity entity
+                newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
+                -- ^ Calculate new Animation Table
+                oldPlayerTable  = entity ^. entityData . animations
+                newPlayerTable = (curState, newPlayerAnimation) 
+                    : filter (\(state, _) -> state == curState) oldPlayerTable
+
+-- ^ Calculate if the movement would cause collision
+-- ^ If it does, return the point to which the body can move
+-- ^ and the entity with which the body has been collided
 tryMove :: World -> Entity -> Position -> (Position, Maybe Entity)
 tryMove world entity (x, y) = ((x, y), Nothing)
 
@@ -94,7 +117,7 @@ detectCollision
     (xc, yc)
     (RectangleBox width height)
     (CircleBox r)
-    = (distance (testX, testY) (xc, yc)) <= r
+    = distance (testX, testY) (xc, yc) <= r
     where
         testX = if xc < xr then xr else xr + width
         testY = if yc < yr then yr else yr + height
