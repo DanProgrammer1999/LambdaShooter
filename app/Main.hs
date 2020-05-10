@@ -19,26 +19,8 @@ simulationRate = 30
 
 main :: IO ()
 main = do
-	putStrLn "Loading sprites..."
-
-	idleAnimation  <- loadAnimation terroristIdlePath
-	runAnimation   <- loadAnimation terroristRunPath
-	deathAnimation <- loadAnimation terroristDeathPath
-	jumpAnimation  <- loadAnimation terroristJumpPath
-	bgPic <- loadPicture backgroundPath
-
-	putStrLn "Sprites are correctly loaded."
-	let jumpAnimationFive =
-		 jumpAnimation {_frames = take 5 $ jumpAnimation ^. frames}
-	let fallAnimation =
-		 jumpAnimation { _frames = [(jumpAnimation ^. frames) !! 6]}
-	let playerAnimationTable = [
-		(Idle, idleAnimation),
-		(Running, runAnimation),
-		(Jumping, jumpAnimationFive),
-		(Falling, fallAnimation),
-		(Dying, deathAnimation)
-		]
-	
-	let world = sampleWorld bgPic playerAnimationTable
-	play FullScreen white simulationRate world renderWorld handleInput updateWorld 
+    bgPic <- loadPicture backgroundPath
+    playerAnimationTable <- loadPlayerAnimations 
+    let world = sampleWorld bgPic playerAnimationTable
+    putStrLn "Play!"
+    play FullScreen white simulationRate world renderWorld handleInput updateWorld 

@@ -18,16 +18,17 @@ jumpHeight = 2.0
 g :: Float
 g = 9.81
 
--------------------------------
-
 entitiesScale :: Float
-entitiesScale = 0.5
+entitiesScale = 0.2
 
 -------------------------------
+blankAnimationPath :: FilePath
+blankAnimationPath = "resources/blank"
 
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 
+----- Terrorist (Player)  -----
 terroristIdlePath :: FilePath
 terroristIdlePath = "resources/terrorist1/idle"
 
@@ -39,3 +40,8 @@ terroristDeathPath = "resources/terrorist1/death"
 
 terroristJumpPath :: FilePath
 terroristJumpPath = "resources/terrorist1/jump"
+
+terroristFallPath :: FilePath
+terroristFallPath = "resources/terrorist1/fall"
+
+
