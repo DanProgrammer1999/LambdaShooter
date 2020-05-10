@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Logic (handleInput, updateWorld) where
 
 import Graphics.Gloss
@@ -11,28 +12,21 @@ import Data.Char
 import CommonData
 import Constants
 import Animation
+import Physics
 
 -- ^ Receive events and update the world
 handleInput :: Event -> World -> World
-handleInput (EventKey (Char c) Down _ _) world = world & myPlayer .~ newPlayer
+handleInput (EventKey (Char c) state _ _) world = world & keyboardData . keyLens .~ isPressed
     where
-        accelerationLens = entityBody . bodyAcceleration
-        currPlayer = world ^. myPlayer
-        c' = toLower c
-        newPlayer =
-            case c' of
-                'a' -> currPlayer & accelerationLens . _1 -~ accelerationRate
-                'd' -> currPlayer & accelerationLens . _1 +~ accelerationRate
-                ' ' -> decelerate (makeJump currPlayer)
-                _   -> decelerate currPlayer
+        isPressed = state == Down
+        keyLens =
+            case toLower c of
+                'a' -> leftKeyPressed 
+                'd' -> rightKeyPressed
+                ' ' -> jumpKeyPressed
+                _   -> ignored
 
 handleInput _ world = world
-
-decelerate :: Entity -> Entity
-decelerate player = player & entityBody . bodyAcceleration . _1 -~ deceleration
-    where
-        currAcceleration = player ^. entityBody . bodyAcceleration . _1
-        deceleration = signum currAcceleration * accelerationRate
 
 makeJump :: Entity -> Entity
 makeJump player = player &~
@@ -46,63 +40,56 @@ makeJump player = player &~
             then jumpHeight
             else 0
 
-
-
--- ^ Update entities parameters (position, velocity, acceleration) based on time passed
--- ^ Gravity calculations and collision detection is also here
--- ^ Note: first update events, physics, then animation
+-- ^ First, update my player according to buttons pressed 
+-- ^ Second, update entities acceleration, velocity, and position; calculate gravity
+-- ^ Third, check for collision
+-- ^ Fourth, if there was collision, restore old position and clear acceleration and velocity
+-- ^ Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = newWorld
+updateWorld timePassed world = world & myPlayer .~ newPlayer
     where
-        gravity_acceleration body = body ^. weight * g
+        oldPlayer = world ^. myPlayer
+        movedPlayer 
+            = oldPlayer & entityBody . bodyAcceleration . _1 
+            +~ timePassed * applyButtonsPress (world ^. keyboardData)    
 
-        newWorld = world & myPlayer %~ updateEntity
-        
-        updateEntity :: Entity -> Entity
-        updateEntity entity
-            = entity &~ do
-                entityBody . bodyPosition .= newPosition
-                entityBody . bodyVelocity .= newVelocity
+        newPlayer = updateEntity timePassed movedPlayer
 
-                entityData . animations .= newPlayerTable
-            where
-                oldPosition = entity ^. entityBody . bodyPosition
-                oldVelocity = entity ^. entityBody . bodyVelocity
-                oldAcceleration = entity ^. entityBody . bodyAcceleration
+updateEntity :: Float -> Entity -> Entity
+updateEntity timePassed entity = 
+    entity &~ do
+        entityBody %= updateBody timePassed
+        entityData . currentState .= newState
+        direction .= newDirection 
+        -- this will update only for players and ignored for other entities
+        -- entityData . animations .= newAnimationTable
+    where
+        (newState, newDirection) = fromMaybe (Idle, RightDirection) (getState entity)
+        newAnimationTable = 
+            if isPlayer entity 
+            then getAnimation timePassed entity
+            else []
 
-                newVelocity = limitVelocity $ addPoints oldVelocity oldAcceleration
-                newPosition = addPoints newVelocity oldPosition
+getState :: Entity -> Maybe (PlayerState, Direction)
+getState entity
+    | (entity ^. velocityLens) > 0 = Just (Running, RightDirection)
+    | (entity ^. velocityLens) < 0 = Just (Running, LeftDirection)
+    | otherwise               = Just (Idle, entity ^. direction)
+    where 
+        velocityLens = entityBody . bodyVelocity . _1
 
-
-                -- ^ All code below should be applied to players only
-
-                -- ^ Update Animation should be done for all players
-                curState = _currentState (entity ^. entityData)
-                -- ^ Calculate new Animation
-                oldPlayerAnimation = fromJust $ getAnimationFromEntity entity
-                newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
-                -- ^ Calculate new Animation Table
-                oldPlayerTable  = entity ^. entityData . animations
-                newPlayerTable = (curState, newPlayerAnimation)
-                    : filter (\(state, _) -> state == curState) oldPlayerTable
-
--- ^ Calculate if the movement would cause collision
--- ^ If it does, return the point to which the body can move
--- ^ and the entity with which the body has been collided
-tryMove :: World -> Entity -> Position -> (Position, Maybe Entity)
-tryMove world entity (x, y) = ((x, y), Nothing)
+applyButtonsPress :: KeyboardInfo -> Float
+applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) 
+    | leftKey == rightKey = 0
+    | leftKey             = -compensatedRate*accelerationRate
+    | otherwise           =  compensatedRate*accelerationRate
+    where compensatedRate = 1 + accelerationRate / decelerationRate
 
 -- checkMapCollision :: Entity -> Map -> Bool
 -- checkMapCollision entity (Map _ maxMapWidth maxMapHeight blocks) 
 --     = _
 --     where
 --         blockPositions = 
-
-limitVelocity :: Velocity -> Velocity
-limitVelocity (x, y) = (newX, newY)
-    where
-        newX = max x maxMovementSpeed
-        newY = max y maxMovementSpeed
 
 checkEntityCollision :: Entity -> Entity -> Bool
 checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 box2
@@ -113,29 +100,16 @@ checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 
         box1 = entity1 ^. entityBody . bodyCollisionBox
         box2 = entity2 ^. entityBody . bodyCollisionBox
 
-detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
-detectCollision
-    (x1, y1)
-    (x2, y2)
-    (RectangleBox width1 height1)
-    (RectangleBox width2 height2)
-    =  x1 < x2 + width2
-    && x1 + width1 > x2
-    && y1 < y2 + height2
-    && y1 + height1 > y2
-
-detectCollision c1 c2 (CircleBox r1) (CircleBox r2)
-    = distance c1 c2 < r1 + r2
-
-detectCollision
-    (xr, yr)
-    (xc, yc)
-    (RectangleBox width height)
-    (CircleBox r)
-    = distance (testX, testY) (xc, yc) <= r
+getAnimation :: Float -> Entity -> [(PlayerState, Animation)]
+getAnimation timePassed player = newPlayerTable
     where
-        testX = if xc < xr then xr else xr + width
-        testY = if yc < yr then yr else yr + height
-
-detectCollision p1 p2 c@(CircleBox _) r@(RectangleBox _ _)
-    = detectCollision p2 p1 r c
+        -- ^ Update Animation should be done for all players
+        curState = fromMaybe Idle (player ^? entityData . currentState)
+        -- ^ Calculate new Animation
+        dummyAnimation = Animation 10 [] 10 10
+        oldPlayerAnimation = fromMaybe dummyAnimation $ getAnimationFromEntity player
+        newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
+        -- ^ Calculate new Animation Table
+        oldPlayerTable = player ^. entityData . animations
+        newPlayerTable = (curState, newPlayerAnimation)
+            : filter (\(state, _) -> state == curState) oldPlayerTable

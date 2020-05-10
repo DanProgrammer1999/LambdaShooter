@@ -30,11 +30,11 @@ type Velocity = Point
 type Acceleration = Point
 
 data CollisionBox
-    = RectangleBox 
+    = RectangleBox
         { _width  :: Float
         , _height :: Float
         }
-    | CircleBox    
+    | CircleBox
         {_radius :: Float }
 
 data Body = Body
@@ -45,8 +45,8 @@ data Body = Body
     , _bodyCollisionBox :: CollisionBox
     }
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
-data Direction =  Left | Right deriving (Eq, Show)
+data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show)
+data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
 
 data EntityData
     = PlayerData
@@ -84,10 +84,21 @@ data Map = Map
     , _blocks      :: [Block]
     }
 
+data KeyboardInfo = KeyboardInfo
+    { _rightKeyPressed   :: Bool
+    , _leftKeyPressed    :: Bool
+    , _jumpKeyPressed    :: Bool
+    , _fireButtonPressed :: Bool
+    }
+
+keyboardInfo :: KeyboardInfo
+keyboardInfo = KeyboardInfo False False False False
+
 data World = World
-    { _worldMap   :: Map
-    , _entities   :: [Entity]
-    , _myPlayer   :: Entity
+    { _worldMap     :: Map
+    , _entities     :: [Entity]
+    , _myPlayer     :: Entity
+    , _keyboardData :: KeyboardInfo
     }
 
 makeLenses ''Weapon
@@ -97,31 +108,26 @@ makeLenses ''EntityData
 makeLenses ''Entity
 makeLenses ''Block
 makeLenses ''Map
+makeLenses ''KeyboardInfo
 makeLenses ''World
 
 isProjectile :: Entity -> Bool
 isProjectile entity
     | isJust $ entity ^? testLens = True
-    | otherwise                   = False 
+    | otherwise                   = False
     where
         testLens = entityData . projectilePower
 
 isPlayer :: Entity -> Bool
 isPlayer entity
     | isJust $ entity ^? testLens = True
-    | otherwise = False 
-    where 
+    | otherwise = False
+    where
         testLens = entityData . name
 
-addPoints :: Point -> Point -> Point
-addPoints (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
-
-distance :: Point -> Point -> Float
-distance (x1, y1) (x2, y2) = sqrt $ (x1 - x2)^2 + (y1 - y2)^2
- 
 -- ^ Returns the right animation from the entitie's animation table
 getAnimationFromEntity :: Entity -> Maybe Animation
 getAnimationFromEntity entity = animation where
     animationTable = entity ^. entityData . animations
-    state = _currentState (entity ^. entityData)
+    state = fromMaybe Idle (entity ^? entityData . currentState)
     animation = lookup state animationTable

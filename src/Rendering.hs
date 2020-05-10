@@ -32,7 +32,7 @@ entityToPicture entity = pic3 where
         then playerPic
         else entity ^. entityTexture
 
-    pic2 = if (entity ^. direction) == Left
+    pic2 = if (entity ^. direction) == LeftDirection
         then flip pic1 
         else pic1
 
