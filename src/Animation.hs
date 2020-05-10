@@ -8,7 +8,7 @@ import System.Directory (getDirectoryContents)
 import Constants
 import Data.Bifunctor
 data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
-data Direction =  Left | Right deriving (Eq, Show)
+data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
 
 defaultFrameDelay :: Float
 defaultFrameDelay = 0.15
