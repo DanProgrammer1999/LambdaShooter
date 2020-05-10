@@ -1,13 +1,21 @@
 module Constants where
 
-movementSpeed :: Float
-movementSpeed = 1000
+maxMovementSpeed :: Float
+maxMovementSpeed = 30
+
+accelerationRate :: Float
+accelerationRate = 5
 
 jumpHeight :: Float
 jumpHeight = 2.0
 
 g :: Float
 g = 9.81
+
+-------------------------------
+
+entitiesScale :: Float
+entitiesScale = 0.1
 
 -------------------------------
 

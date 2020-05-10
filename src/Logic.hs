@@ -2,9 +2,11 @@ module Logic (handleInput, updateWorld) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Data.Vector
 import Control.Lens
 import Data.Maybe
 import Data.Either
+import Data.Char
 
 import CommonData
 import Constants
@@ -12,18 +14,25 @@ import Animation
 
 -- ^ Receive events and update the world
 handleInput :: Event -> World -> World
-handleInput (EventKey (Char c) Down _ _) world = newWorld
+handleInput (EventKey (Char c) Down _ _) world = world & myPlayer .~ newPlayer
     where
-        positionLens = myPlayer . entityBody . bodyPosition
-
-        newWorld =
-            case c of
-                'a' -> world & positionLens . _1 -~ movementSpeed
-                'd' -> world & positionLens . _1 +~ movementSpeed
-                ' ' -> world & myPlayer .~ makeJump (world ^. myPlayer)
-                _   -> world
+        accelerationLens = entityBody . bodyAcceleration
+        currPlayer = world ^. myPlayer
+        c' = toLower c
+        newPlayer =
+            case c' of
+                'a' -> currPlayer & accelerationLens . _1 -~ accelerationRate
+                'd' -> currPlayer & accelerationLens . _1 +~ accelerationRate
+                ' ' -> decelerate (makeJump currPlayer)
+                _   -> decelerate currPlayer
 
 handleInput _ world = world
+
+decelerate :: Entity -> Entity
+decelerate player = player & entityBody . bodyAcceleration . _1 -~ deceleration
+    where
+        currAcceleration = player ^. entityBody . bodyAcceleration . _1
+        deceleration = signum currAcceleration * accelerationRate
 
 makeJump :: Entity -> Entity
 makeJump player = player &~
@@ -44,37 +53,37 @@ makeJump player = player &~
 -- ^ Note: first update events, physics, then animation
 updateWorld :: Float -> World -> World
 updateWorld timePassed world = newWorld
-    where 
+    where
         gravity_acceleration body = body ^. weight * g
-        
-        newWorld = world { _myPlayer = updateEntity  (_myPlayer world)}
 
+        newWorld = world & myPlayer %~ updateEntity
         
         updateEntity :: Entity -> Entity
-        updateEntity entity 
+        updateEntity entity
             = entity &~ do
-                entityBody . bodyPosition .= newPosition 
-                entityBody . bodyVelocity %= addPoints oldAcceleration
+                entityBody . bodyPosition .= newPosition
+                entityBody . bodyVelocity .= newVelocity
 
                 entityData . animations .= newPlayerTable
-            where 
-                oldPosition = entity ^. entityBody . bodyPosition 
+            where
+                oldPosition = entity ^. entityBody . bodyPosition
                 oldVelocity = entity ^. entityBody . bodyVelocity
                 oldAcceleration = entity ^. entityBody . bodyAcceleration
-                -- ^ TODO Change newPosition. Made just for compilation  
-                newPosition = oldPosition 
-                
+
+                newVelocity = limitVelocity $ addPoints oldVelocity oldAcceleration
+                newPosition = addPoints newVelocity oldPosition
+
 
                 -- ^ All code below should be applied to players only
 
                 -- ^ Update Animation should be done for all players
-                curState = _currentState (entity ^. entityData) 
+                curState = _currentState (entity ^. entityData)
                 -- ^ Calculate new Animation
                 oldPlayerAnimation = fromJust $ getAnimationFromEntity entity
                 newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
                 -- ^ Calculate new Animation Table
                 oldPlayerTable  = entity ^. entityData . animations
-                newPlayerTable = (curState, newPlayerAnimation) 
+                newPlayerTable = (curState, newPlayerAnimation)
                     : filter (\(state, _) -> state == curState) oldPlayerTable
 
 -- ^ Calculate if the movement would cause collision
@@ -88,6 +97,12 @@ tryMove world entity (x, y) = ((x, y), Nothing)
 --     = _
 --     where
 --         blockPositions = 
+
+limitVelocity :: Velocity -> Velocity
+limitVelocity (x, y) = (newX, newY)
+    where
+        newX = max x maxMovementSpeed
+        newY = max y maxMovementSpeed
 
 checkEntityCollision :: Entity -> Entity -> Bool
 checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 box2

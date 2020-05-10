@@ -5,6 +5,7 @@ import Control.Lens
 
 import CommonData
 import Animation
+import Constants
 import Prelude hiding (Left, Right, flip)
 
 -- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
@@ -21,7 +22,7 @@ renderWorld world
 renderEntities :: [Entity] -> Picture
 renderEntities entities = mconcat pictures  where
     pictures :: [Picture]
-    pictures = map entityToPicture entities
+    pictures = map (scale entitiesScale entitiesScale . entityToPicture) entities
 
 
 -- ^ Render all Entities and translates and flip accordingly. 
