@@ -68,13 +68,15 @@ data Entity
 data Block = Block
     { _blockPosition :: Position
     , _blockTexture  :: Picture
+    , _blockWidth    :: Float
+    , _blockHeight   :: Float
     }
 
 data Map = Map
     { _background :: Picture
     , _maxWidth   :: Float
     , _maxHeight  :: Float
-    , _tiles      :: [Block]
+    , _blocks      :: [Block]
     }
 
 data World = World

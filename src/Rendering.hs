@@ -23,9 +23,9 @@ renderEntities entities = mconcat pictures
         pictures = map (view entityTexture) entities
 
 renderMap :: Map -> Picture
-renderMap m = (m ^. background) <> mconcat blocks 
+renderMap m = (m ^. background) <> mconcat blocksPics 
     where
-        blocks = map renderBlock (m ^. tiles)
+        blocksPics = map renderBlock (m ^. blocks)
 
 renderBlock :: Block -> Picture
 renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
