@@ -24,6 +24,7 @@ data Weapon
         , _wavePower         :: Float
         , _waveHitRadius     :: Float
         }
+    deriving Show
 
 type Position = Point
 type Velocity = Point
@@ -33,9 +34,10 @@ data CollisionBox
     = RectangleBox
         { _width  :: Float
         , _height :: Float
-        }
+        } 
     | CircleBox
-        {_radius :: Float }
+        {_radius :: Float } 
+    deriving Show
 
 data Body = Body
     { _bodyPosition     :: Position
@@ -43,7 +45,7 @@ data Body = Body
     , _weight           :: Float
     , _bodyAcceleration :: Acceleration
     , _bodyCollisionBox :: CollisionBox
-    }
+    } deriving Show
 
 data EntityData
     = PlayerData
@@ -66,6 +68,9 @@ data Entity
     , _entityData    :: EntityData
     , _direction     :: Direction
     }
+instance Show Entity where 
+    show (Entity body _ eData direction) = 
+        show body ++ show (_currentState eData) ++ show direction
 
 data Block = Block
     { _blockPosition :: Position

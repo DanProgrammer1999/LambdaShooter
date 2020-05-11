@@ -28,18 +28,6 @@ handleInput (EventKey (Char c) state _ _) world = world & keyboardData . keyLens
 
 handleInput _ world = world
 
-makeJump :: Entity -> Entity
-makeJump player = player &~
-    do
-        entityData . hasJumped .= True
-        entityBody . bodyPosition . _2 += availableJumpHeight
-    where
-        hasPlayerJumped = fromMaybe True (player ^? entityData . hasJumped)
-        availableJumpHeight =
-            if not hasPlayerJumped
-            then jumpHeight
-            else 0
-
 -- ^ First, update my player according to buttons pressed 
 -- ^ Second, update entities acceleration, velocity, and position; calculate gravity
 -- ^ Third, check for collision
@@ -49,11 +37,14 @@ updateWorld :: Float -> World -> World
 updateWorld timePassed world = world & myPlayer .~ newPlayer
     where
         oldPlayer = world ^. myPlayer
-        movedPlayer 
-            = oldPlayer & entityBody . bodyAcceleration . _1 
-            +~ timePassed * applyButtonsPress (world ^. keyboardData)    
 
-        newPlayer = updateEntity timePassed movedPlayer
+        updateAcceleration a = addPoints a (mulSV timePassed deltaA)
+            where 
+                deltaA = applyButtonsPress (world ^. keyboardData)
+
+        movedPlayer 
+            = oldPlayer & entityBody . bodyAcceleration %~ updateAcceleration
+        newPlayer =  updateEntity timePassed movedPlayer
 
 updateEntity :: Float -> Entity -> Entity
 updateEntity timePassed entity = 
@@ -74,16 +65,22 @@ getState :: Entity -> Maybe (PlayerState, Direction)
 getState entity
     | (entity ^. velocityLens) > 0 = Just (Running, RightDirection)
     | (entity ^. velocityLens) < 0 = Just (Running, LeftDirection)
-    | otherwise               = Just (Idle, entity ^. direction)
+    | otherwise                    = Just (Idle, entity ^. direction)
     where 
         velocityLens = entityBody . bodyVelocity . _1
 
-applyButtonsPress :: KeyboardInfo -> Float
+applyButtonsPress :: KeyboardInfo -> Acceleration
 applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) 
-    | leftKey == rightKey = 0
-    | leftKey             = -compensatedRate*accelerationRate
-    | otherwise           =  compensatedRate*accelerationRate
-    where compensatedRate = 1 + accelerationRate / decelerationRate
+    = (0, 0) &~ 
+    do
+        _1 += case (leftKey, rightKey) of
+                (True, True)   -> 0
+                (False, False) -> 0
+                (True, False)  -> -accelerationRate
+                (False, True)  -> accelerationRate
+        _2 += if jumpKey 
+              then jumpAcceleration
+              else 0
 
 -- checkMapCollision :: Entity -> Map -> Bool
 -- checkMapCollision entity (Map _ maxMapWidth maxMapHeight blocks) 
