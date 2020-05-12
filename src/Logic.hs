@@ -41,7 +41,9 @@ updateWorld timePassed world = world & myPlayer .~ newPlayer
         newVelocity = mulSV timePassed $ applyButtonsPress (world ^. keyboardData)
     
         movedPlayer 
-            = oldPlayer & entityBody . bodyVelocity .~ newVelocity
+            = oldPlayer & entityBody . bodyVelocity . _1 .~ (fst newVelocity)
+                        & entityBody . bodyVelocity . _2 +~ (snd newVelocity)
+
             
         newPlayer =  updateEntity timePassed movedPlayer
 
@@ -68,11 +70,14 @@ updateEntity timePassed entity =
 
 getState :: Entity -> Maybe (PlayerState, Direction)
 getState entity
-    | (entity ^. velocityLens) > 0 = Just (Running, RightDirection)
-    | (entity ^. velocityLens) < 0 = Just (Running, LeftDirection)
-    | otherwise                    = Just (Idle, entity ^. direction)
+    | (entity ^. velocityLens . _2) > 0 = Just (Jumping, currDirection)
+    | (entity ^. velocityLens . _2) < 0 = Just (Falling, currDirection)
+    | (entity ^. velocityLens . _1) > 0 = Just (Running, RightDirection)
+    | (entity ^. velocityLens . _1) < 0 = Just (Running, LeftDirection)
+    | otherwise                    = Just (Idle, currDirection)
     where 
-        velocityLens = entityBody . bodyVelocity . _1
+        currDirection = entity ^. direction
+        velocityLens = entityBody . bodyVelocity
 
 applyButtonsPress :: KeyboardInfo -> Velocity
 applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) 

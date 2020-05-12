@@ -22,7 +22,7 @@ simulationRate :: Int
 simulationRate = 30
 
 main :: IO ()
-main = debug
+main = release
 
 release :: IO ()
 release = do
