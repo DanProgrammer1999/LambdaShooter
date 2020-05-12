@@ -5,6 +5,7 @@ import Prelude hiding (Left, Right)
 
 import Animation 
 import CommonData
+import Constants
 
 sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
 sampleWorld background animationTable = World
@@ -15,4 +16,4 @@ makePlayer :: String -> [(PlayerState, Animation)] -> Entity
 makePlayer name animationTable =
      Entity playerBody Blank playerData RightDirection where
         playerData = PlayerData [] 0 100.0 0 name False Idle animationTable 
-        playerBody = Body (0,0) (0,0) 10.0 (0, 0) (RectangleBox 10.0 20.0)
+        playerBody = Body defaultPosition (0,0) 10.0 (0, 0) (RectangleBox 10.0 20.0)

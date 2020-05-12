@@ -58,7 +58,13 @@ updateEntity timePassed entity =
         newAnimationTable = 
             if isPlayer entity 
             then getAnimation timePassed entity
-            else []
+            else [
+                (Idle,    getDefaultAnimation),
+                (Running, getDefaultAnimation),
+                (Dying,   getDefaultAnimation),
+                (Jumping, getDefaultAnimation),
+                (Falling, getDefaultAnimation)
+            ]
 
 getState :: Entity -> Maybe (PlayerState, Direction)
 getState entity
@@ -102,8 +108,7 @@ getAnimation timePassed player = newPlayerTable
         -- ^ Update Animation should be done for all players
         curState = fromMaybe Idle (player ^? entityData . currentState)
         -- ^ Calculate new Animation
-        dummyAnimation = Animation 10 [] 10 10
-        oldPlayerAnimation = fromMaybe dummyAnimation $ getAnimationFromEntity player
+        oldPlayerAnimation = fromMaybe getDefaultAnimation $ getAnimationFromEntity player
         newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
         -- ^ Calculate new Animation Table
         oldPlayerTable = player ^. entityData . animations

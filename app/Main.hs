@@ -2,9 +2,12 @@ module Main where
 
 import Data.Maybe
 import Control.Lens
+import System.Environment
+import System.Exit
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Graphics.Gloss.Juicy
+
 
 import CommonData
 import Demo (sampleWorld)
@@ -19,7 +22,7 @@ simulationRate :: Int
 simulationRate = 30
 
 main :: IO ()
-main = release
+main = debug
 
 release :: IO ()
 release = do
