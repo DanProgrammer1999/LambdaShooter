@@ -5,6 +5,7 @@ import Prelude hiding (Left, Right)
 
 import Animation 
 import CommonData
+import Constants
 
 sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
 sampleWorld background animationTable = World

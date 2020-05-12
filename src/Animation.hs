@@ -18,7 +18,7 @@ data Animation = Animation
   , _frames      :: [Picture]  -- ^ All frames
   , _waitFor     :: Float      -- ^ Time until next frame
   , _curFrame    :: Int        -- ^ Current number of frame
-  }
+  } deriving(Show)
 
 makeLenses ''Animation
 
@@ -74,6 +74,7 @@ loadPlayerAnimations = do
     let states = map fst stateAnimations
     anims <- mapM snd stateAnimations
     let animationTable = zip states anims
+    print states
     putStrLn "Player animations are loaded!"
     return animationTable
 
@@ -85,6 +86,14 @@ allTerroristAnimationPathes = [
     (Jumping, terroristJumpPath),
     (Falling, terroristFallPath)
     ]
+
+getDefaultAnimation :: Animation
+getDefaultAnimation  = Animation {
+    _frameDelay = defaultFrameDelay
+  , _frames = [color yellow $ rectangleSolid 50 50]
+  , _waitFor = defaultFrameDelay ---- ^ maybe we should divide by simulationRate
+  ,_curFrame = 0
+}
 
 loadBlankAnimation :: IO Animation
 loadBlankAnimation = loadAnimation blankAnimationPath

@@ -7,7 +7,10 @@ accelerationRate :: Float
 accelerationRate = 50000
 
 jumpAcceleration :: Float
-jumpAcceleration = 10000
+jumpAcceleration = 1000
+
+defaultPosition :: (Float, Float)
+defaultPosition = (0, 2000)
 
 g :: Float
 g = 9.81

@@ -2,9 +2,12 @@ module Main where
 
 import Data.Maybe
 import Control.Lens
+import System.Environment
+import System.Exit
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Graphics.Gloss.Juicy
+
 
 import CommonData
 import Demo (sampleWorld)
