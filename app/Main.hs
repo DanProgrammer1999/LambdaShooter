@@ -3,6 +3,7 @@ module Main where
 import Data.Maybe
 import Control.Lens
 import Graphics.Gloss
+import Graphics.Gloss.Interface.IO.Game
 import Graphics.Gloss.Juicy
 
 import CommonData
@@ -18,9 +19,39 @@ simulationRate :: Int
 simulationRate = 30
 
 main :: IO ()
-main = do
+main = debug
+
+release :: IO ()
+release = do
     bgPic <- loadPicture backgroundPath
-    playerAnimationTable <- loadPlayerAnimations 
+    playerAnimationTable <- loadPlayerAnimations
     let world = sampleWorld bgPic playerAnimationTable
-    putStrLn "Play!"
-    play FullScreen white simulationRate world renderWorld handleInput updateWorld 
+    play FullScreen white simulationRate world renderWorld handleInput updateWorld
+
+debug :: IO ()
+debug = do
+    playerAnimationTable <- loadPlayerAnimations
+    -- blank background (we know it loads correctly)
+    let world = sampleWorld blank playerAnimationTable
+
+    putStrLn "Starting..."
+    playIO FullScreen white simulationRate world renderWorldIO handleInputIO updateWorldIO
+
+renderWorldIO :: World -> IO Picture
+renderWorldIO = return . renderWorld
+
+handleInputIO :: Event -> World -> IO World
+handleInputIO event world
+    =  putStrLn ("Event happened: " ++ show event)
+    >> return (handleInput event world)
+
+updateWorldIO :: Float -> World -> IO World
+updateWorldIO timePassed world 
+    =  putStrLn ("Time since last frame: " ++ show timePassed)
+    >> putStrLn ("My player details " ++ (world ^. myPlayer & show))
+    >> return (updateWorld timePassed world) 
+
+
+
+
+

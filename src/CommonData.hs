@@ -70,7 +70,7 @@ data Entity
     }
 instance Show Entity where 
     show (Entity body _ eData direction) = 
-        show body ++ show (_currentState eData) ++ show direction
+        show body ++ "; State:" ++ show (_currentState eData) ++ "; Direction: " ++ show direction
 
 data Block = Block
     { _blockPosition :: Position
