@@ -17,36 +17,9 @@ limitVelocity (x, y) = (newX, newY)
 updateBody :: Float -> Body -> Body
 updateBody timePassed body = body &~
     do 
-        bodyAcceleration .= newAcceleration'
-        bodyVelocity     .= newVelocity
-        bodyPosition     .= newPosition
+        bodyPosition .= newPosition
     where
-        oldAcceleration = body ^. bodyAcceleration
-        newAcceleration = oldAcceleration & _1 %~ (\a -> a - timePassed * deceleration a)
-        newAcceleration' = 
-            if fst newVelocity == maxMovementSpeed 
-            then newAcceleration & _1 .~ 0
-            else newAcceleration 
-
-        newVelocity = limited
-            where
-                addedVelocity = addPoints (body ^. bodyVelocity) newAcceleration
-
-                friction = timePassed * calcFriction (fst addedVelocity)
-                withFriction = addedVelocity & _1 -~ friction
-                limited = limitVelocity withFriction
-
-        newPosition = addPoints (body ^. bodyPosition) (mulSV timePassed newVelocity)
-
-calcFriction :: Float -> Float
-calcFriction vx 
-    | vx == 0   = 0
-    | otherwise = signum vx * frictionRate
-
-deceleration :: Float -> Float
-deceleration ax 
-    | ax == 0   = 0
-    | otherwise = signum ax * decelerationRate
+        newPosition = addPoints (body ^. bodyPosition) (mulSV timePassed (body ^. bodyVelocity))
 
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision

@@ -1,16 +1,10 @@
 module Constants where
 
 maxMovementSpeed :: Float
-maxMovementSpeed = 500
+maxMovementSpeed = 1000000
 
 accelerationRate :: Float
-accelerationRate = 100
-
-decelerationRate :: Float
-decelerationRate = accelerationRate
-
-frictionRate :: Float
-frictionRate = accelerationRate
+accelerationRate = 50000
 
 jumpAcceleration :: Float
 jumpAcceleration = 2.0

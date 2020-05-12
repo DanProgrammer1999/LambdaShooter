@@ -38,12 +38,11 @@ updateWorld timePassed world = world & myPlayer .~ newPlayer
     where
         oldPlayer = world ^. myPlayer
 
-        updateAcceleration a = addPoints a (mulSV timePassed deltaA)
-            where 
-                deltaA = applyButtonsPress (world ^. keyboardData)
-
+        newVelocity = mulSV timePassed $ applyButtonsPress (world ^. keyboardData)
+    
         movedPlayer 
-            = oldPlayer & entityBody . bodyAcceleration %~ updateAcceleration
+            = oldPlayer & entityBody . bodyVelocity .~ newVelocity
+            
         newPlayer =  updateEntity timePassed movedPlayer
 
 updateEntity :: Float -> Entity -> Entity
@@ -69,7 +68,7 @@ getState entity
     where 
         velocityLens = entityBody . bodyVelocity . _1
 
-applyButtonsPress :: KeyboardInfo -> Acceleration
+applyButtonsPress :: KeyboardInfo -> Velocity
 applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) 
     = (0, 0) &~ 
     do
