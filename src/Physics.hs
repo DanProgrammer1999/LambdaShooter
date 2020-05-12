@@ -27,10 +27,6 @@ updateBody timePassed body = body &~
 gravityAcceleration :: Body -> Float 
 gravityAcceleration body = - g * body ^. weight
 
-detectMapCollision :: Position -> CollisionBox -> Map -> Bool
-detectMapCollision (newX, newY) (RectangleBox w h) 
-detectMapCollision _ _ = True
-
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision
     (x1, y1)
