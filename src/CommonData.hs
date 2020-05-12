@@ -28,7 +28,6 @@ data Weapon
 
 type Position = Point
 type Velocity = Point
-type Acceleration = Point
 
 data CollisionBox
     = RectangleBox
@@ -43,7 +42,6 @@ data Body = Body
     { _bodyPosition     :: Position
     , _bodyVelocity     :: Velocity
     , _weight           :: Float
-    , _bodyAcceleration :: Acceleration
     , _bodyCollisionBox :: CollisionBox
     } deriving Show
 
@@ -54,7 +52,6 @@ data EntityData
     , _health        :: Float
     , _score         :: Float
     , _name          :: String
-    , _hasJumped     :: Bool -- ^ Should be deleted, we have currentState now
     , _currentState  :: PlayerState
     , _animations    :: [(PlayerState, Animation)]
     }

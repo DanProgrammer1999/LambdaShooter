@@ -7,7 +7,7 @@ accelerationRate :: Float
 accelerationRate = 50000
 
 jumpAcceleration :: Float
-jumpAcceleration = 2.0
+jumpAcceleration = 10000
 
 g :: Float
 g = 9.81

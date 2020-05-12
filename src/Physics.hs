@@ -18,8 +18,14 @@ updateBody :: Float -> Body -> Body
 updateBody timePassed body = body &~
     do 
         bodyPosition .= newPosition
+        bodyVelocity .= newVelocity
     where
-        newPosition = addPoints (body ^. bodyPosition) (mulSV timePassed (body ^. bodyVelocity))
+        oldVelocity = body ^. bodyVelocity 
+        newVelocity = oldVelocity & _2 +~ gravityAcceleration body
+        newPosition = addPoints (body ^. bodyPosition) (mulSV timePassed newVelocity)
+
+gravityAcceleration :: Body -> Float 
+gravityAcceleration body = - g * body ^. weight
 
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision

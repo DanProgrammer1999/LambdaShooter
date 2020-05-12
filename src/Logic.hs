@@ -16,17 +16,17 @@ import Physics
 
 -- ^ Receive events and update the world
 handleInput :: Event -> World -> World
-handleInput (EventKey (Char c) state _ _) world = world & keyboardData . keyLens .~ isPressed
-    where
-        isPressed = state == Down
-        keyLens =
-            case toLower c of
-                'a' -> leftKeyPressed 
-                'd' -> rightKeyPressed
-                ' ' -> jumpKeyPressed
-                _   -> ignored
-
+handleInput (EventKey (Char c) state _ _) world
+    = world & keyboardData %~ keyAction (toLower c) (state == Down)
+handleInput (EventKey (SpecialKey KeySpace) state _ _) world
+    = world & keyboardData %~ keyAction ' ' (state == Down)
 handleInput _ world = world
+
+keyAction :: Char -> Bool -> KeyboardInfo -> KeyboardInfo
+keyAction 'a' isDown = set leftKeyPressed isDown
+keyAction 'd' isDown = set rightKeyPressed isDown
+keyAction ' ' isDown = set jumpKeyPressed isDown
+keyAction _ _        = id
 
 -- ^ First, update my player according to buttons pressed 
 -- ^ Second, update entities acceleration, velocity, and position; calculate gravity
