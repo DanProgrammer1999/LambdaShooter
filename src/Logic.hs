@@ -41,16 +41,15 @@ updateWorld timePassed world = world & myPlayer .~ newPlayer
         newVelocity = mulSV timePassed $ applyButtonsPress (world ^. keyboardData)
     
         movedPlayer 
-            = oldPlayer & entityBody . bodyVelocity . _1 .~ (fst newVelocity)
-                        & entityBody . bodyVelocity . _2 +~ (snd newVelocity)
-
+            = oldPlayer & entityBody . bodyVelocity . _1 .~ fst newVelocity
+                        & entityBody . bodyVelocity . _2 +~ snd newVelocity
             
-        newPlayer =  updateEntity timePassed movedPlayer
+        newPlayer =  updateEntity timePassed (world ^. worldMap) movedPlayer
 
-updateEntity :: Float -> Entity -> Entity
-updateEntity timePassed entity = 
+updateEntity :: Float -> Map -> Entity -> Entity
+updateEntity timePassed map entity = 
     entity &~ do
-        entityBody %= updateBody timePassed
+        entityBody %= updateBody timePassed map
         entityData . currentState .= newState
         direction .= newDirection 
         -- this will update only for players and ignored for other entities
@@ -60,21 +59,15 @@ updateEntity timePassed entity =
         newAnimationTable = 
             if isPlayer entity 
             then getAnimation timePassed entity
-            else [
-                (Idle,    getDefaultAnimation),
-                (Running, getDefaultAnimation),
-                (Dying,   getDefaultAnimation),
-                (Jumping, getDefaultAnimation),
-                (Falling, getDefaultAnimation)
-            ]
+            else []
 
 getState :: Entity -> Maybe (PlayerState, Direction)
 getState entity
-    | (entity ^. velocityLens . _2) > 0 = Just (Jumping, currDirection)
-    | (entity ^. velocityLens . _2) < 0 = Just (Falling, currDirection)
-    | (entity ^. velocityLens . _1) > 0 = Just (Running, RightDirection)
-    | (entity ^. velocityLens . _1) < 0 = Just (Running, LeftDirection)
-    | otherwise                    = Just (Idle, currDirection)
+    | (entity ^. velocityLens . _2) > stopVelocity    = Just (Jumping, currDirection)
+    | (entity ^. velocityLens . _2) < (-stopVelocity) = Just (Falling, currDirection)
+    | (entity ^. velocityLens . _1) > stopVelocity    = Just (Running, RightDirection)
+    | (entity ^. velocityLens . _1) < (-stopVelocity) = Just (Running, LeftDirection)
+    | otherwise                                       = Just (Idle, currDirection)
     where 
         currDirection = entity ^. direction
         velocityLens = entityBody . bodyVelocity

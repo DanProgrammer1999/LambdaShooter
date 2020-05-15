@@ -41,7 +41,8 @@ entityToPicture entity = pic3 where
     animation = getAnimationFromEntity entity
     playerPic = case animation of
         Just a -> 
-            let foundPic = (a ^. frames) ^? element (a ^. curFrame) in
+            let foundPic = a ^? frames . element (a ^. curFrame) in 
+            -- let foundPic = (a ^. frames) ^? element (a ^. curFrame) in
                 case foundPic of
                     Just p -> p
                     Nothing ->  error $ "No such animation sprite with index "

@@ -4,13 +4,22 @@ maxMovementSpeed :: Float
 maxMovementSpeed = 1000000
 
 accelerationRate :: Float
-accelerationRate = 50000
+accelerationRate = 10000
 
 jumpAcceleration :: Float
 jumpAcceleration = 1000
 
 defaultPosition :: (Float, Float)
-defaultPosition = (0, 2000)
+defaultPosition = (1000, 100)
+
+-- | Very small velocity which is considered 0
+stopVelocity :: Float 
+stopVelocity = 15
+
+-- | Velocity multiplied by this on collision
+-- | Used to avoid too abrupt velocity cut on fall
+collisionVelocityRate :: Float
+collisionVelocityRate = 0.1
 
 g :: Float
 g = 9.81
