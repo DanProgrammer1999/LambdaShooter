@@ -29,7 +29,8 @@ library:
     - gloss-juicy
     - lens
     - directory
-
+    - JuicyPixels
+    - JuicyPixels-extra
 executables:
   shooter-exe:
     main:                Main.hs
@@ -44,6 +45,8 @@ executables:
     - gloss-juicy
     - directory
     - lens
+    - JuicyPixels
+    - JuicyPixels-extra
 
 tests:
   shooter-test:

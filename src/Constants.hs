@@ -1,5 +1,7 @@
 module Constants where
 
+import Graphics.Gloss
+
 maxMovementSpeed :: Float
 maxMovementSpeed = 1000000
 
@@ -28,9 +30,6 @@ entitiesScale :: Float
 entitiesScale = 0.2
 
 -------------------------------
-blankAnimationPath :: FilePath
-blankAnimationPath = "resources/blank"
-
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 
@@ -49,5 +48,10 @@ terroristJumpPath = "resources/terrorist1/jump"
 
 terroristFallPath :: FilePath
 terroristFallPath = "resources/terrorist1/fall"
+
+
+----- Pictures  -----
+getDefaultPicture :: Picture
+getDefaultPicture = color yellow $ rectangleSolid 100 100
 
 

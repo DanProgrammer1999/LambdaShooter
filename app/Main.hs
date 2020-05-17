@@ -38,7 +38,8 @@ debug = do
     let world = sampleWorld blank playerAnimationTable
 
     putStrLn "Starting..."
-    playIO FullScreen white simulationRate world renderWorldIO handleInputIO updateWorldIO
+    playIO (InWindow "LambdaShooter" (1280, 720) (0,0)) white simulationRate
+     world renderWorldIO handleInputIO updateWorldIO
 
 renderWorldIO :: World -> IO Picture
 renderWorldIO = return . renderWorld

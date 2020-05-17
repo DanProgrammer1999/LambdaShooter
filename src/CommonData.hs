@@ -80,7 +80,7 @@ data Map = Map
     { _background :: Picture
     , _maxWidth   :: Float
     , _maxHeight  :: Float
-    , _blocks      :: [Block]
+    , _blocks     :: [Block]
     }
 
 data KeyboardInfo = KeyboardInfo

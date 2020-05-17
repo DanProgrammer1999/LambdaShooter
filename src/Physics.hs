@@ -14,6 +14,7 @@ limitVelocity (x, y) = (newX, newY)
         newX = min x maxMovementSpeed
         newY = min y maxMovementSpeed
 
+--  TODO TOFIX Daniel : Player falls through the blocks. (picture in telegram) 
 updateBody :: Float -> Map -> Body -> Body
 updateBody timePassed map body = body &~
     do 

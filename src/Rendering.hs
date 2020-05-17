@@ -27,21 +27,19 @@ renderEntities entities = mconcat pictures  where
 
 -- ^ Render all Entities and translates and flip accordingly. 
 entityToPicture :: Entity -> Picture
-entityToPicture entity = pic3 where
+entityToPicture entity = pic where
     pic1 = if isPlayer entity
         then playerPic
         else entity ^. entityTexture
 
-    pic2 = if (entity ^. direction) == LeftDirection
-        then flip pic1 
-        else pic1
-
-    pic3 = uncurry translate (entity ^. entityBody . bodyPosition) pic2
+    pic = uncurry translate (entity ^. entityBody . bodyPosition) pic1
 
     animation = getAnimationFromEntity entity
     playerPic = case animation of
         Just a -> 
-            let foundPic = a ^? frames . element (a ^. curFrame) in 
+            let foundPic = (if (entity ^. direction) == RightDirection
+                then a ^? frames . element (a ^. curFrame)
+                else a ^? flippedFrames . element (a ^. curFrame)) in 
             -- let foundPic = (a ^. frames) ^? element (a ^. curFrame) in
                 case foundPic of
                     Just p -> p
@@ -61,7 +59,3 @@ renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
 -- TODO
 renderUI :: EntityData -> Picture
 renderUI pd = color blue $ circleSolid 15
-
--- ^ Flips picture. 
-flip :: Picture -> Picture
-flip  = id

@@ -46,6 +46,7 @@ updateWorld timePassed world = world & myPlayer .~ newPlayer
             
         newPlayer =  updateEntity timePassed (world ^. worldMap) movedPlayer
 
+-- TODO TOFIX Daniel : LeftDirection is never observed.
 updateEntity :: Float -> Map -> Entity -> Entity
 updateEntity timePassed map entity = 
     entity &~ do

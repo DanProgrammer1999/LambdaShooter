@@ -9,8 +9,10 @@ import Constants
 
 sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
 sampleWorld background animationTable = World
-    (Map background 1000000 1000 []) [] (makePlayer "Alex" animationTable) keyboardInfo
-     
+    (Map background 1000000 1000 [makeRedBlock (0,-200) 800 100]) [] (makePlayer "Alex" animationTable) keyboardInfo
+
+makeRedBlock :: Position -> Float -> Float -> Block
+makeRedBlock pos w h = Block pos (color red $ rectangleSolid w h) w h
 
 makePlayer :: String -> [(PlayerState, Animation)] -> Entity
 makePlayer name animationTable =
