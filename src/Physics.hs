@@ -45,27 +45,11 @@ gravityAcceleration body = - g * body ^. weight
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
 detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
-    = isBorderCollision && isBlockCollision
+    = and (checkBlockCollision <$> allBlocks)
     where 
         checkBlockCollision (Block blockPosition _ w h) 
             = detectCollision position blockPosition collisionBox (RectangleBox w h) 
         
-        isBlockCollision = and (checkBlockCollision <$> allBlocks)
-        isBorderCollision = detectBorderCollision (maxW, maxH) position collisionBox            
-
-detectBorderCollision :: Position -> Position -> CollisionBox -> Bool
-detectBorderCollision (maxW, maxH) (x, y) (RectangleBox w h) 
-    =  x < 0 
-    || x + w > maxW
-    || y < 0 
-    || y + h > maxH
-
-detectBorderCollision (maxW, maxH) (x, y) (CircleBox r)
-    =  x - r < 0 
-    || x + r > maxW
-    || y - r < 0 
-    || y + r > maxH
-
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision
     (x1, y1)
