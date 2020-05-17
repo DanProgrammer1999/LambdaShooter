@@ -23,30 +23,29 @@ updateBody timePassed map body = body &~
         oldVelocity = body ^. bodyVelocity 
         newVelocity = oldVelocity & _2 +~ timePassed * gravityAcceleration body
 
-        oldPosition = body ^. bodyPosition 
-        newPosition = addPoints oldPosition (mulSV timePassed newVelocity)
+        (oldX, oldY) = body ^. bodyPosition 
+        (newX, newY) = (oldX + timePassed * fst newVelocity, oldY + timePassed * snd newVelocity)
+        (xUpdate, yUpdate) = ((newX, oldY), (oldX, newY))
 
-        collision = detectMapCollision map newPosition (body ^. bodyCollisionBox)
-        
+        [xCollision, yCollision] = fmap (detectMapCollision map (body ^. bodyCollisionBox)) [xUpdate, yUpdate]
+
         replaceIfCollision isCollision original replace = 
             original &~ do
                 _1 %= (\x -> if fst isCollision then fst replace else x)
                 _2 %= (\y -> if snd isCollision then snd replace else y)
 
-        newPosition' = replaceIfCollision collision newPosition oldPosition
+        newPosition' = replaceIfCollision (xCollision, yCollision) (newX, newY) (oldX, oldY)
 
         collisionVelocity = mulSV collisionVelocityRate newVelocity
-        newVelocity' = replaceIfCollision collision newVelocity collisionVelocity
+        newVelocity' = replaceIfCollision (xCollision, yCollision) newVelocity collisionVelocity
 
 
 gravityAcceleration :: Body -> Float 
 gravityAcceleration body = - g * body ^. weight
 
-detectMapCollision :: Map -> Position -> CollisionBox -> (Bool, Bool)
-detectMapCollision (Map _ maxW maxH allBlocks) position collisionBox
-    = isBorderCollision 
-        & _1 %~ (&& isBlockCollision)
-        & _2 %~ (&& isBlockCollision) 
+detectMapCollision :: Map -> CollisionBox -> Position -> Bool
+detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
+    = isBorderCollision && isBlockCollision
     where 
         checkBlockCollision (Block blockPosition _ w h) 
             = detectCollision position blockPosition collisionBox (RectangleBox w h) 
@@ -54,18 +53,18 @@ detectMapCollision (Map _ maxW maxH allBlocks) position collisionBox
         isBlockCollision = and (checkBlockCollision <$> allBlocks)
         isBorderCollision = detectBorderCollision (maxW, maxH) position collisionBox            
 
-detectBorderCollision :: Position -> Position -> CollisionBox -> (Bool, Bool)
+detectBorderCollision :: Position -> Position -> CollisionBox -> Bool
 detectBorderCollision (maxW, maxH) (x, y) (RectangleBox w h) 
-    = (xCollision, yCollision)
-    where 
-        xCollision = x < 0 || x + w > maxW
-        yCollision = y < 0 || y + h > maxH
+    =  x < 0 
+    || x + w > maxW
+    || y < 0 
+    || y + h > maxH
 
 detectBorderCollision (maxW, maxH) (x, y) (CircleBox r)
-    = (xCollision, yCollision)
-    where
-        xCollision = x - r < 0 || x + r > maxW
-        yCollision = y - r < 0 || y + r > maxH
+    =  x - r < 0 
+    || x + r > maxW
+    || y - r < 0 
+    || y + r > maxH
 
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision
