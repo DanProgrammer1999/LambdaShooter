@@ -51,7 +51,7 @@ detectMapCollision (Map _ maxW maxH allBlocks) position collisionBox
         checkBlockCollision (Block blockPosition _ w h) 
             = detectCollision position blockPosition collisionBox (RectangleBox w h) 
         
-        isBlockCollision = sum (checkBlockCollision <$> allBlocks)
+        isBlockCollision = and (checkBlockCollision <$> allBlocks)
         isBorderCollision = detectBorderCollision (maxW, maxH) position collisionBox            
 
 detectBorderCollision :: Position -> Position -> CollisionBox -> (Bool, Bool)
