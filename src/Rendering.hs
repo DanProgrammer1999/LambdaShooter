@@ -8,7 +8,6 @@ import Animation
 import Constants
 import Prelude hiding (flip)
 
--- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
 renderWorld world 
     =  renderMap (world ^. worldMap)

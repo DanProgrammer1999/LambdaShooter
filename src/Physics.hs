@@ -14,28 +14,30 @@ limitVelocity (x, y) = (newX, newY)
         newX = min x maxMovementSpeed
         newY = min y maxMovementSpeed
 
---  TODO TOFIX Daniel : Player falls through the blocks. (picture in telegram) 
 updateBody :: Float -> Map -> Body -> Body
 updateBody timePassed map body = body &~
     do 
         bodyPosition .= newPosition'
         bodyVelocity .= newVelocity'
+        collisionHappened .= if xCollision || yCollision then True else False
     where
         oldVelocity = body ^. bodyVelocity 
         newVelocity = oldVelocity & _2 +~ timePassed * gravityAcceleration body
 
-        (oldX, oldY) = body ^. bodyPosition 
-        (newX, newY) = (oldX + timePassed * fst newVelocity, oldY + timePassed * snd newVelocity)
-        (xUpdate, yUpdate) = ((newX, oldY), (oldX, newY))
+        oldPosition@(oldX, oldY) = body ^. bodyPosition 
+        (newX, newY) = addPoints oldPosition (mulSV timePassed newVelocity)
+        (xUpdate, yUpdate) = (oldPosition & _1 .~ newX, oldPosition & _2 .~ newY)
 
-        [xCollision, yCollision] = fmap (detectMapCollision map (body ^. bodyCollisionBox)) [xUpdate, yUpdate]
+        collisionBox = body ^. bodyCollisionBox
+        xCollision = detectMapCollision map collisionBox xUpdate
+        yCollision = detectMapCollision map collisionBox yUpdate
 
-        replaceIfCollision isCollision original replace = 
-            original &~ do
-                _1 %= (\x -> if fst isCollision then fst replace else x)
-                _2 %= (\y -> if snd isCollision then snd replace else y)
+        replaceIfCollision isCollision original replace = (x, y)
+            where
+                x = if fst isCollision then fst replace else fst original
+                y = if snd isCollision then snd replace else snd original
 
-        newPosition' = replaceIfCollision (xCollision, yCollision) (newX, newY) (oldX, oldY)
+        newPosition' = replaceIfCollision (xCollision, yCollision) (newX, newY) oldPosition
 
         collisionVelocity = mulSV collisionVelocityRate newVelocity
         newVelocity' = replaceIfCollision (xCollision, yCollision) newVelocity collisionVelocity
@@ -53,14 +55,20 @@ detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
         
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool
 detectCollision
-    (x1, y1)
-    (x2, y2)
+    (xCentre1, yCentre1)
+    (xCentre2, yCentre2)
     (RectangleBox width1 height1)
     (RectangleBox width2 height2)
     =  x1 < x2 + width2
     && x1 + width1 > x2
     && y1 < y2 + height2
     && y1 + height1 > y2
+    where 
+        -- Calculate coords of left bottom corner
+        (x1, y1) = (xCentre1 - width1/2, yCentre1 - height1/2)
+        (x2, y2) = (xCentre2 - width2/2, yCentre2 - height2/2) 
+
+-- (-400, -250)
 
 detectCollision c1 c2 (CircleBox r1) (CircleBox r2)
     = distance c1 c2 < r1 + r2

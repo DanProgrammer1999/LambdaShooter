@@ -43,6 +43,7 @@ data Body = Body
     , _bodyVelocity     :: Velocity
     , _weight           :: Float
     , _bodyCollisionBox :: CollisionBox
+    , _collisionHappened :: Bool
     } deriving Show
 
 data EntityData
