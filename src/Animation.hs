@@ -40,7 +40,7 @@ animationFromImages imgs = Animation {
     _frameDelay = defaultFrameDelay
   , _frames = pics
   , _flippedFrames = flippedPics
-  , _waitFor = defaultFrameDelay ---- ^ maybe we should divide by simulationRate
+  , _waitFor = defaultFrameDelay -- maybe we should divide by simulationRate
   , _curFrame = 0
 } where
   pics = map fromImageRGBA8 imgs
@@ -56,13 +56,15 @@ loadAnimation filepath = do
   images <- mapM loadImage relativePicFiles
   return $ animationFromImages images
 
+-- TODO change to return IO (Either Image PixelRGBA8)
+-- | loads single image from a given filepath.
 loadImage :: FilePath -> IO (Image PixelRGBA8)
 loadImage filepath = do 
   dynamicImage <- readPng filepath
   case dynamicImage of
       Right img -> return (convertRGBA8 img)
       Left err -> do
-          -- maybe we need to stop execution if smth goes wrong
+          
             let errorMsg = "Image \"" ++ filepath ++ "\" was not found."
             error (errorMsg ++ err)
 
@@ -113,6 +115,6 @@ getDefaultAnimation  = Animation {
     _frameDelay = defaultFrameDelay
   , _frames = [getDefaultPicture]
   , _flippedFrames = [getDefaultPicture]
-  , _waitFor = defaultFrameDelay ---- ^ maybe we should divide by simulationRate
+  , _waitFor = defaultFrameDelay -- maybe we should divide by simulationRate
   , _curFrame = 0
 }

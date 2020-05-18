@@ -8,7 +8,7 @@ import Animation
 import Constants
 import Prelude hiding (flip)
 
--- TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
+-- | TODO add translation to myPlayerPosition - screenWidth/2 (and same for height)
 renderWorld :: World -> Picture
 renderWorld world 
     =  renderMap (world ^. worldMap)
@@ -17,15 +17,15 @@ renderWorld world
     where
         allEntities = world ^. myPlayer : world ^. entities  
 
--- In case we want to see collision (for DEBUG purposes only)
--- we need to draw them additionaly here 
+-- | In case we want to see collision (for DEBUG purposes only)
+-- | we need to draw them additionaly here 
 renderEntities :: [Entity] -> Picture
 renderEntities entities = mconcat pictures  where
     pictures :: [Picture]
     pictures = map (scale entitiesScale entitiesScale . entityToPicture) entities
 
 
--- ^ Render all Entities and translates and flip accordingly. 
+-- | Render all Entities and translates and flip accordingly. 
 entityToPicture :: Entity -> Picture
 entityToPicture entity = pic where
     pic1 = if isPlayer entity
