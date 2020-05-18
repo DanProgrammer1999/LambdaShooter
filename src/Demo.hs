@@ -14,6 +14,8 @@ sampleWorld background animationTable = World
 makeRedBlock :: Position -> Float -> Float -> Block
 makeRedBlock pos w h = Block pos (color red $ rectangleSolid w h) w h
 
+
+-- TODO TOFIX (ALL) "Make a correct CollisionBox for players".
 makePlayer :: String -> [(PlayerState, Animation)] -> Entity
 makePlayer name animationTable =
      Entity playerBody Blank playerData RightDirection where

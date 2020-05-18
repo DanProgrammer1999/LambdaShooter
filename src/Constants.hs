@@ -54,4 +54,7 @@ terroristFallPath = "resources/terrorist1/fall"
 getDefaultPicture :: Picture
 getDefaultPicture = color yellow $ rectangleSolid 100 100
 
+getBodyColor :: Color
+getBodyColor = blue
+
 
