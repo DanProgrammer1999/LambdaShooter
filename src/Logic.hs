@@ -34,63 +34,66 @@ keyAction _ _        = id
 -- | Fourth, if there was collision, restore old position and clear acceleration and velocity
 -- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = world & myPlayer .~ newPlayer
+updateWorld timePassed world = updateMyPlayer timePassed world
+
+
+updateMyPlayer :: Float -> World -> World
+updateMyPlayer timePassed world = world & myPlayer .~ newPlayer
     where
         oldPlayer = world ^. myPlayer
 
-        newVelocity = mulSV timePassed $ applyButtonsPress (world ^. keyboardData)
-    
-        movedPlayer 
-            = oldPlayer & entityBody . bodyVelocity . _1 .~ fst newVelocity
-                        & entityBody . bodyVelocity . _2 +~ snd newVelocity
-            
-        newPlayer =  updateEntity timePassed (world ^. worldMap) movedPlayer
+        (deltaVelocity, newDirection) = applyButtonsPress (world ^. keyboardData) oldPlayer
+        deltaVelocity' = mulSV timePassed deltaVelocity
 
--- TODO TOFIX Daniel : LeftDirection is never observed.
+        oldVelocity = oldPlayer ^. entityBody . bodyVelocity
+        newVelocity = oldVelocity &~ do
+            _1 .= fst deltaVelocity'
+            _2 += snd deltaVelocity'
+
+        newPlayer = updateEntity timePassed (world ^. worldMap) withVelocity
+            where
+                withDirection = oldPlayer & direction .~ newDirection
+                withVelocity = withDirection & entityBody . bodyVelocity .~ newVelocity
+
+
 updateEntity :: Float -> Map -> Entity -> Entity
-updateEntity timePassed map entity = 
+updateEntity timePassed map entity =
     entity &~ do
         entityBody %= updateBody timePassed map
-        entityData . currentState .= newState
-        direction .= newDirection 
+        entityData . currentState .= getState entity
         -- this will update only for players and ignored for other entities
         -- entityData . animations .= newAnimationTable
     where
-        (newState, newDirection) = fromMaybe (Idle, RightDirection) (getState entity)
-        newAnimationTable = 
-            if isPlayer entity 
+        newAnimationTable =
+            if isPlayer entity
             then getAnimation timePassed entity
             else []
 
-getState :: Entity -> Maybe (PlayerState, Direction)
+getState :: Entity -> PlayerState
 getState entity
-    | (entity ^. velocityLens . _2) > stopVelocity    = Just (Jumping, currDirection)
-    | (entity ^. velocityLens . _2) < (-stopVelocity) = Just (Falling, currDirection)
-    | (entity ^. velocityLens . _1) > stopVelocity    = Just (Running, RightDirection)
-    | (entity ^. velocityLens . _1) < (-stopVelocity) = Just (Running, LeftDirection)
-    | otherwise                                       = Just (Idle, currDirection)
-    where 
-        currDirection = entity ^. direction
+    | snd velocity > stopVelocity    = Jumping
+    | snd velocity < (-stopVelocity) = Falling
+    | fst velocity > stopVelocity    = Running
+    | fst velocity < (-stopVelocity) = Running
+    | otherwise                      = Idle
+    where
+        velocity = entity ^. entityBody . bodyVelocity
+
+applyButtonsPress :: KeyboardInfo -> Entity -> (Velocity, Direction)
+applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
+    = ((xVelocity, yVelocity), newDirection)
+    where
         velocityLens = entityBody . bodyVelocity
-
-applyButtonsPress :: KeyboardInfo -> Velocity
-applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) 
-    = (0, 0) &~ 
-    do
-        _1 += case (leftKey, rightKey) of
-                (True, True)   -> 0
-                (False, False) -> 0
-                (True, False)  -> -accelerationRate
-                (False, True)  -> accelerationRate
-        _2 += if jumpKey 
-              then jumpAcceleration
-              else 0
-
--- checkMapCollision :: Entity -> Map -> Bool
--- checkMapCollision entity (Map _ maxMapWidth maxMapHeight blocks) 
---     = _
---     where
---         blockPositions = 
+        (xVelocity, newDirection) =
+            case (leftKey, rightKey) of
+                (True, True)   -> (0, entity ^. direction)
+                (False, False) -> (0, entity ^. direction)
+                (True, False)  -> (entity ^. velocityLens . _1 - accelerationRate, LeftDirection)
+                (False, True)  -> (entity ^. velocityLens . _1 + accelerationRate, RightDirection)
+        yVelocity =
+            if jumpKey
+            then jumpAcceleration
+            else 0
 
 checkEntityCollision :: Entity -> Entity -> Bool
 checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 box2

@@ -19,7 +19,7 @@ updateBody timePassed map body = body &~
     do 
         bodyPosition .= newPosition'
         bodyVelocity .= newVelocity'
-        collisionHappened .= if xCollision || yCollision then True else False
+        collisionHappened .= (xCollision || yCollision)
     where
         oldVelocity = body ^. bodyVelocity 
         newVelocity = oldVelocity & _2 +~ timePassed * gravityAcceleration body
@@ -43,7 +43,7 @@ updateBody timePassed map body = body &~
         newVelocity' = replaceIfCollision (xCollision, yCollision) newVelocity collisionVelocity
 
 
-gravityAcceleration :: Body -> Float 
+gravityAcceleration :: Body -> Float
 gravityAcceleration body = - g * body ^. weight
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
@@ -67,8 +67,6 @@ detectCollision
         -- Calculate coords of left bottom corner
         (x1, y1) = (xCentre1 - width1/2, yCentre1 - height1/2)
         (x2, y2) = (xCentre2 - width2/2, yCentre2 - height2/2) 
-
--- (-400, -250)
 
 detectCollision c1 c2 (CircleBox r1) (CircleBox r2)
     = distance c1 c2 < r1 + r2
