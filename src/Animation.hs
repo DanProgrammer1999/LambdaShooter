@@ -84,9 +84,7 @@ dynamicImageToPicture :: DynamicImage -> Picture
 dynamicImageToPicture = fromImageRGBA8.convertRGBA8
 
 scaleAnimation :: Float  -> Animation -> Animation
-scaleAnimation scaleFactor anima = anima {
-    _frames = map (scale scaleFactor scaleFactor) (anima ^. frames)
-}  
+scaleAnimation scaleFactor anima = anima & frames %~ (map (scale scaleFactor scaleFactor))
 
 loadPlayerAnimations :: IO [(PlayerState, Animation)]
 loadPlayerAnimations = do
@@ -100,6 +98,7 @@ loadPlayerAnimations = do
     putStrLn "Player animations are loaded!"
     return animationTable
 
+-- TODO TOFIX Alex: player textures for different states need to be aligned properly
 allTerroristAnimationPathes :: [(PlayerState, FilePath)]
 allTerroristAnimationPathes = [
     (Idle, terroristIdlePath),

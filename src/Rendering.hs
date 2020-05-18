@@ -26,6 +26,8 @@ renderEntities entities = mconcat pictures  where
 
 
 -- | Render all Entities and translates and flip accordingly. 
+-- TODO TOFIX Alex: fix scaling issues
+-- TODO TOFIX Alex: fix error on state change
 entityToPicture :: Entity -> Picture
 entityToPicture entity = pic where
     pic1 = if isPlayer entity

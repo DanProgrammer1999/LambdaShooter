@@ -17,7 +17,7 @@ sampleMap =
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
-sampleBlockTexture w h = color red $ rectangleSolid (w*entitiesScale) (h*entitiesScale)
+sampleBlockTexture w h = color red $ rectangleSolid w h
 
 
 -- TODO TOFIX (ALL) "Make a correct CollisionBox for players".
