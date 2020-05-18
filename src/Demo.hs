@@ -19,6 +19,8 @@ sampleMap =
 sampleBlockTexture :: Float -> Float -> Picture
 sampleBlockTexture w h = color red $ rectangleSolid (w*entitiesScale) (h*entitiesScale)
 
+
+-- TODO TOFIX (ALL) "Make a correct CollisionBox for players".
 makePlayer :: String -> [(PlayerState, Animation)] -> Entity
 makePlayer name animationTable =
      Entity playerBody Blank playerData RightDirection where

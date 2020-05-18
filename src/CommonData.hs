@@ -125,7 +125,7 @@ isPlayer entity
     where
         testLens = entityData . name
 
--- ^ Returns the right animation from the entitie's animation table
+-- | Returns the right animation from the entitie's animation table
 getAnimationFromEntity :: Entity -> Maybe Animation
 getAnimationFromEntity entity = animation where
     animationTable = entity ^. entityData . animations

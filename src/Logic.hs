@@ -14,7 +14,7 @@ import Constants
 import Animation
 import Physics
 
--- ^ Receive events and update the world
+-- | Receive events and update the world
 handleInput :: Event -> World -> World
 handleInput (EventKey (Char c) state _ _) world
     = world & keyboardData %~ keyAction (toLower c) (state == Down)
@@ -28,11 +28,11 @@ keyAction 'd' isDown = set rightKeyPressed isDown
 keyAction ' ' isDown = set jumpKeyPressed isDown
 keyAction _ _        = id
 
--- ^ First, update my player according to buttons pressed 
--- ^ Second, update entities acceleration, velocity, and position; calculate gravity
--- ^ Third, check for collision
--- ^ Fourth, if there was collision, restore old position and clear acceleration and velocity
--- ^ Finally, if the collision was with projectile, subtract the value from the player's health
+-- | First, update my player according to buttons pressed 
+-- | Second, update entities acceleration, velocity, and position; calculate gravity
+-- | Third, check for collision
+-- | Fourth, if there was collision, restore old position and clear acceleration and velocity
+-- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
 updateWorld timePassed world = world & myPlayer .~ newPlayer
     where
@@ -104,12 +104,12 @@ checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 
 getAnimation :: Float -> Entity -> [(PlayerState, Animation)]
 getAnimation timePassed player = newPlayerTable
     where
-        -- ^ Update Animation should be done for all players
+        -- | Update Animation should be done for all players
         curState = fromMaybe Idle (player ^? entityData . currentState)
-        -- ^ Calculate new Animation
+        -- | Calculate new Animation
         oldPlayerAnimation = fromMaybe getDefaultAnimation $ getAnimationFromEntity player
         newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
-        -- ^ Calculate new Animation Table
+        -- | Calculate new Animation Table
         oldPlayerTable = player ^. entityData . animations
         newPlayerTable = (curState, newPlayerAnimation)
             : filter (\(state, _) -> state == curState) oldPlayerTable

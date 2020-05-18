@@ -11,20 +11,21 @@ import Prelude hiding (flip)
 renderWorld :: World -> Picture
 renderWorld world 
     =  renderMap (world ^. worldMap)
-    <> renderEntities allEntities 
+    <> renderEntities allEntities
+    <> renderBodies (map _entityBody allEntities) 
     <> renderUI (world ^. myPlayer . entityData)
     where
         allEntities = world ^. myPlayer : world ^. entities  
 
--- In case we want to see collision (for DEBUG purposes only)
--- we need to draw them additionaly here 
+-- | In case we want to see collision (for DEBUG purposes only)
+-- | we need to draw them additionaly here 
 renderEntities :: [Entity] -> Picture
 renderEntities entities = mconcat pictures  where
     pictures :: [Picture]
     pictures = map (scale entitiesScale entitiesScale . entityToPicture) entities
 
 
--- ^ Render all Entities and translates and flip accordingly. 
+-- | Render all Entities and translates and flip accordingly. 
 entityToPicture :: Entity -> Picture
 entityToPicture entity = pic where
     pic1 = if isPlayer entity
@@ -47,6 +48,18 @@ entityToPicture entity = pic where
         Nothing -> error $ "No such animation with state " ++
          show (_currentState (entity ^. entityData))
 
+renderBodies ::  [Body] -> Picture
+renderBodies bodies = mconcat pictures where
+    pictures = map bodyToPicture bodies
+
+bodyToPicture :: Body -> Picture
+bodyToPicture body = uncurry translate (body ^. bodyPosition) pic where
+    pic = renderCollisionBox (body ^. bodyCollisionBox)
+
+renderCollisionBox :: CollisionBox -> Picture
+renderCollisionBox (RectangleBox w h) = color getBodyColor $ rectangleSolid w h
+renderCollisionBox (CircleBox r) =  color getBodyColor $ circleSolid r
+
 renderMap :: Map -> Picture
 renderMap m = (m ^. background) <> mconcat blocksPics 
     where
@@ -57,4 +70,4 @@ renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
 
 -- TODO
 renderUI :: EntityData -> Picture
-renderUI pd = color blue $ circleSolid 15
+renderUI pd = color yellow $ circleSolid 15
