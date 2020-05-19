@@ -94,7 +94,7 @@ data KeyboardInfo = KeyboardInfo
     { _rightKeyPressed   :: Bool
     , _leftKeyPressed    :: Bool
     , _jumpKeyPressed    :: Bool
-    , _fireKeyPressed :: Bool
+    , _fireKeyPressed    :: Bool
     }
 
 keyboardInfo :: KeyboardInfo
@@ -107,6 +107,7 @@ data World = World
     , _players      :: [Entity]
     , _myPlayer     :: Entity
     , _keyboardData :: KeyboardInfo
+    , _shootingCooldown :: Float
     }
 makeLenses ''World
 
@@ -126,10 +127,10 @@ makeBullet :: Float -> Position -> Direction -> Entity
 makeBullet bulletPower origin = Entity body texture (ProjectileData bulletPower)  
     where
         body = Body origin defaultBulletVelocity bulletWeight bulletCollisionBox False
-        texture = color yellow $ Circle 1
+        texture = color black $ circleSolid 5
 
 bulletCollisionBox :: CollisionBox
-bulletCollisionBox = CircleBox 1
+bulletCollisionBox = CircleBox 5
 
 isProjectile :: Entity -> Bool
 isProjectile entity

@@ -35,13 +35,17 @@ bulletWeight :: Float
 bulletWeight = 0.1
 
 bulletOffset :: Float
-bulletOffset = 0.5
+bulletOffset = 10
 
 defaultBulletVelocity :: (Float, Float)
 defaultBulletVelocity = (1000, 0)
 
 defaultBulletPower :: Float
 defaultBulletPower = 35
+
+-- in seconds
+maxShootingCooldown :: Float 
+maxShootingCooldown = 0.5
 
 -------------------------------
 backgroundPath :: FilePath

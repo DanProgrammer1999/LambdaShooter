@@ -29,22 +29,30 @@ keyAction 'd' isDown info = info & rightKeyPressed .~ isDown
 keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
--- | First, update my player according to buttons pressed 
--- | Second, update entities acceleration, velocity, and position; calculate gravity
--- | Third, check for collision
--- | Fourth, if there was collision, restore old position and clear acceleration and velocity
--- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = withNewPlayer & projectiles .~ newProjectiles
+updateWorld timePassed world = withNewPlayer &~
+    do
+        projectiles .= newProjectiles
+        shootingCooldown .= newCooldown
     where
         withNewPlayer = updateMyPlayer timePassed world
-
         oldProjectiles = world ^. projectiles
+        
+        willShoot = canShoot && requestedShoot
+            where
+                requestedShoot = world ^. keyboardData . fireKeyPressed  
+                canShoot = world ^. shootingCooldown == 0
+        
+        newCooldown = 
+            if willShoot 
+            then maxShootingCooldown 
+            else max 0 (world ^. shootingCooldown - timePassed)
+
         newProjectiles = 
-            if world ^. keyboardData . fireKeyPressed
+            if willShoot
             then newProjectile : oldProjectiles
             else oldProjectiles
-            where newProjectile = shootBullet (withNewPlayer ^. myPlayer)
+            where newProjectile = createBullet (withNewPlayer ^. myPlayer)
 
 updateMyPlayer :: Float -> World -> World
 updateMyPlayer timePassed world = world & myPlayer .~ newPlayer
@@ -82,18 +90,18 @@ updateEntity timePassed map entity =
             then getNewAnimation timePassed entity (newState /= oldState)
             else []
 
-shootBullet :: Entity -> Entity
-shootBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
+createBullet :: Entity -> Entity
+createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
     where 
-        playerPosition = player ^. entityBody . bodyPosition
-        (RectangleBox w h) = player ^. entityBody . bodyCollisionBox 
-        offsets = (w/2 + bulletOffset, h/2)
+        (x, y) = player ^. entityBody . bodyPosition
+        (RectangleBox w _) = player ^. entityBody . bodyCollisionBox 
         directionMultiplier = 
             case player ^. direction of 
                 LeftDirection -> -1
                 RightDirection -> 1
-
-        bulletPosition = addPoints playerPosition (mulSV directionMultiplier offsets)        
+        
+        xOffset = directionMultiplier*w/2 + bulletOffset
+        bulletPosition = (x + xOffset, y)  
 
 getNewState :: Entity -> PlayerState
 getNewState entity
