@@ -7,9 +7,10 @@ import Animation
 import CommonData
 import Constants
 
-sampleWorld :: Picture -> [(PlayerState, Animation)] -> World
-sampleWorld background animationTable = World
-    (Map background 1000000 10000 sampleMap) [] (makePlayer "Alex" animationTable) keyboardInfo
+sampleWorld :: Picture -> [(PlayerState, Animation)] -> CollisionBox-> World
+sampleWorld background animationTable playerColBox = World
+    (Map background 1000000 10000 sampleMap) []
+     (makePlayer "Alex" animationTable playerColBox) keyboardInfo
 
 sampleMap = 
     [
@@ -21,8 +22,8 @@ sampleBlockTexture w h = color red $ rectangleSolid w h
 
 
 -- TODO TOFIX (ALL) "Make a correct CollisionBox for players".
-makePlayer :: String -> [(PlayerState, Animation)] -> Entity
-makePlayer name animationTable =
+makePlayer :: String -> [(PlayerState, Animation)] -> CollisionBox -> Entity
+makePlayer name animationTable  colBox =
      Entity playerBody Blank playerData RightDirection where
         playerData = PlayerData [] 0 100.0 0 name Idle animationTable 
-        playerBody = Body defaultPosition (0,0) 10.0 (RectangleBox 10.0 40.0) False
+        playerBody = Body defaultPosition defaultVelocity 10.0 colBox False

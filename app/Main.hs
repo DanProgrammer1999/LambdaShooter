@@ -28,14 +28,14 @@ release :: IO ()
 release = do
     bgPic <- loadPicture backgroundPath
     playerAnimationTable <- loadPlayerAnimations
-    let world = sampleWorld bgPic playerAnimationTable
+    let world = sampleWorld bgPic playerAnimationTable (RectangleBox 50 50)
     play FullScreen white simulationRate world renderWorld handleInput updateWorld
 
 debug :: IO ()
 debug = do
     playerAnimationTable <- loadPlayerAnimations
     -- blank background (we know it loads correctly)
-    let world = sampleWorld blank playerAnimationTable
+    let world = sampleWorld blank playerAnimationTable (RectangleBox 50 50)
 
     putStrLn "Starting..."
     playIO (InWindow "LambdaShooter" (1280, 720) (0,0)) white simulationRate
