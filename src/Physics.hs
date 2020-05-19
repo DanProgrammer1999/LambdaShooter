@@ -8,12 +8,6 @@ import CommonData
 import Constants
 
 
-limitVelocity :: Velocity -> Velocity
-limitVelocity (x, y) = (newX, newY)
-    where
-        newX = min x maxMovementSpeed
-        newY = min y maxMovementSpeed
-
 updateBody :: Float -> Map -> Body -> Body
 updateBody timePassed map body = body &~
     do 
@@ -25,7 +19,7 @@ updateBody timePassed map body = body &~
         newVelocity = oldVelocity & _2 +~ timePassed * gravityAcceleration body
 
         oldPosition@(oldX, oldY) = body ^. bodyPosition 
-        (newX, newY) = addPoints oldPosition (mulSV timePassed newVelocity)
+        (newX, newY) = addPoints oldPosition newVelocity
         (xUpdate, yUpdate) = (oldPosition & _1 .~ newX, oldPosition & _2 .~ newY)
 
         collisionBox = body ^. bodyCollisionBox
@@ -44,11 +38,11 @@ updateBody timePassed map body = body &~
 
 
 gravityAcceleration :: Body -> Float
-gravityAcceleration body = - g * body ^. weight
+gravityAcceleration body = - fallAcceleration * body ^. weight
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
 detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
-    = and (checkBlockCollision <$> allBlocks)
+    = or (checkBlockCollision <$> allBlocks)
     where 
         checkBlockCollision (Block blockPosition _ w h) 
             = detectCollision position blockPosition collisionBox (RectangleBox w h) 

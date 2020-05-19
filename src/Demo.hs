@@ -14,7 +14,8 @@ sampleWorld background animationTable playerColBox = World
 
 sampleMap = 
     [
-        Block (0, -200) (sampleBlockTexture 800 100) 800 100 
+        Block (0, -200) (sampleBlockTexture 800 100) 800 100,
+        Block (200, 30) (sampleBlockTexture 200 40) 200 40 
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture

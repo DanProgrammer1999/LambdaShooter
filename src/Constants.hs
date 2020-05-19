@@ -2,14 +2,14 @@ module Constants where
 
 import Graphics.Gloss
 
-maxMovementSpeed :: Float
-maxMovementSpeed = 1000000
-
 accelerationRate :: Float
-accelerationRate = 10000
+accelerationRate = 250
 
 jumpAcceleration :: Float
 jumpAcceleration = 1000
+
+fallAcceleration :: Float
+fallAcceleration = 5
 
 defaultPosition :: (Float, Float)
 defaultPosition = (0, 100)
@@ -19,15 +19,12 @@ defaultVelocity = (0, 0)
 
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
-stopVelocity = 15
+stopVelocity = 1
 
 -- | Velocity multiplied by this on collision
 -- | Used to avoid too abrupt velocity cut on fall
 collisionVelocityRate :: Float
 collisionVelocityRate = 0.1
-
-g :: Float
-g = 9.81
 
 entitiesScale :: Float
 entitiesScale = 0.2

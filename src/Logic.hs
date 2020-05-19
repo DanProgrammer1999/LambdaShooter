@@ -22,10 +22,10 @@ handleInput (EventKey (SpecialKey KeySpace) state _ _) world
 handleInput _ world = world
 
 keyAction :: Char -> Bool -> KeyboardInfo -> KeyboardInfo
-keyAction 'a' isDown = set leftKeyPressed isDown
-keyAction 'd' isDown = set rightKeyPressed isDown
-keyAction ' ' isDown = set jumpKeyPressed isDown
-keyAction _ _        = id
+keyAction 'a' isDown info = info & leftKeyPressed .~ isDown
+keyAction 'd' isDown info = info & rightKeyPressed .~ isDown
+keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
+keyAction _ _        info = info
 
 -- | First, update my player according to buttons pressed 
 -- | Second, update entities acceleration, velocity, and position; calculate gravity
@@ -71,15 +71,16 @@ updateEntity timePassed map entity =
 
 getNewState :: Entity -> PlayerState
 getNewState entity
-    | snd velocity > stopVelocity    = Jumping
-    | snd velocity < (-stopVelocity) = Falling
-    | fst velocity > stopVelocity    = Running
-    | fst velocity < (-stopVelocity) = Running
-    | otherwise                      = Idle
+    | snd velocity > stopVelocity      = Jumping
+    | snd velocity < (-stopVelocity)   = Falling
+    | currState == Just Jumping        = Jumping
+    | abs(fst velocity) > stopVelocity = Running
+    | otherwise                        = Idle
     where
         velocity = entity ^. entityBody . bodyVelocity
         currState = entity ^? entityData . currentState
 
+-- | Should only be used on my player 
 applyButtonsPress :: KeyboardInfo -> Entity -> (Velocity, Direction)
 applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
     = ((xVelocity, yVelocity), newDirection)
@@ -91,8 +92,11 @@ applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
                 (False, False) -> (0, entity ^. direction)
                 (True, False)  -> (entity ^. velocityLens . _1 - accelerationRate, LeftDirection)
                 (False, True)  -> (entity ^. velocityLens . _1 + accelerationRate, RightDirection)
+        currState = entity ^? entityData . currentState
+        jumpAllowed = currState == Just Idle || currState == Just Running
+        -- jumpAllowed = True
         yVelocity =
-            if jumpKey
+            if jumpKey && jumpAllowed
             then jumpAcceleration
             else 0
 
