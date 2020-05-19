@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Logic (handleInput, updateWorld) where
 
 import Graphics.Gloss
@@ -70,14 +69,15 @@ updateEntity timePassed map entity =
             else []
 
 getState :: Entity -> PlayerState
-getState entity
-    | snd velocity > stopVelocity    = Jumping
-    | snd velocity < (-stopVelocity) = Falling
-    | fst velocity > stopVelocity    = Running
-    | fst velocity < (-stopVelocity) = Running
-    | otherwise                      = Idle
+getState entity  
+    | snd velocity > stopVelocity      = Jumping
+    | snd velocity < stopVelocity      = Falling
+    | abs(fst velocity) > stopVelocity = Running
+    | currState == Just Jumping        = Falling
+    | otherwise                        = Idle
     where
         velocity = entity ^. entityBody . bodyVelocity
+        currState = entity ^? entityData . currentState
 
 applyButtonsPress :: KeyboardInfo -> Entity -> (Velocity, Direction)
 applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
