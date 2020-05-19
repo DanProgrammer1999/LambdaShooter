@@ -35,7 +35,7 @@ debug :: IO ()
 debug = do
     playerAnimationTable <- loadPlayerAnimations
     -- blank background (we know it loads correctly)
-    let world = sampleWorld blank playerAnimationTable (RectangleBox 50 50)
+    let world = sampleWorld blank playerAnimationTable (RectangleBox 40 80)
 
     putStrLn "Starting..."
     playIO (InWindow "LambdaShooter" (1280, 720) (0,0)) white simulationRate
