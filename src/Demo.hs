@@ -9,8 +9,8 @@ import Constants
 
 sampleWorld :: Picture -> [(PlayerState, Animation)] -> CollisionBox-> World
 sampleWorld background animationTable playerColBox = World
-    (Map background 1000000 10000 sampleMap) []
-     (makePlayer "Alex" animationTable playerColBox) keyboardInfo
+    (Map background 1000000 10000 sampleMap) [] []
+    (makePlayer "Alex" animationTable playerColBox) keyboardInfo
 
 sampleMap = 
     [

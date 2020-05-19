@@ -4,10 +4,12 @@ module CommonData where
 
 import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
+import Graphics.Gloss
 import Control.Lens
 import Data.Maybe
 
 import Animation
+import Constants
 
 data Weapon
     = ShootingWeapon
@@ -92,7 +94,7 @@ data KeyboardInfo = KeyboardInfo
     { _rightKeyPressed   :: Bool
     , _leftKeyPressed    :: Bool
     , _jumpKeyPressed    :: Bool
-    , _fireButtonPressed :: Bool
+    , _fireKeyPressed :: Bool
     }
 
 keyboardInfo :: KeyboardInfo
@@ -101,20 +103,33 @@ makeLenses ''KeyboardInfo
 
 data World = World
     { _worldMap     :: Map
-    , _entities     :: [Entity]
+    , _projectiles  :: [Entity]
+    , _players      :: [Entity]
     , _myPlayer     :: Entity
     , _keyboardData :: KeyboardInfo
     }
 makeLenses ''World
 
 instance Show Entity where 
-    show e@(Entity body _ eData direction) = 
-        show body ++ 
-        "; State:" ++ show (_currentState eData) ++ 
-        "; Direction: " ++ show direction ++ 
-        "; AnimationInfo: " ++ show 
-            (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+    show e@(Entity body _ eData direction) 
+        | isPlayer e = 
+            show body ++ 
+            "; State:" ++ show (_currentState eData) ++ 
+            "; Direction: " ++ show direction ++ 
+            "; AnimationInfo: " ++ show 
+                (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+        | otherwise = 
+            show body ++
+            "; Direction: " ++ show direction ++ "\n"
 
+makeBullet :: Float -> Position -> Direction -> Entity
+makeBullet bulletPower origin = Entity body texture (ProjectileData bulletPower)  
+    where
+        body = Body origin defaultBulletVelocity bulletWeight bulletCollisionBox False
+        texture = color yellow $ Circle 1
+
+bulletCollisionBox :: CollisionBox
+bulletCollisionBox = CircleBox 1
 
 isProjectile :: Entity -> Bool
 isProjectile entity

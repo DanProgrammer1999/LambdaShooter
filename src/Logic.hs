@@ -19,6 +19,8 @@ handleInput (EventKey (Char c) state _ _) world
     = world & keyboardData %~ keyAction (toLower c) (state == Down)
 handleInput (EventKey (SpecialKey KeySpace) state _ _) world
     = world & keyboardData %~ keyAction ' ' (state == Down)
+handleInput (EventKey (MouseButton LeftButton) state _ _) world 
+    = world & keyboardData . fireKeyPressed .~ (state == Down)
 handleInput _ world = world
 
 keyAction :: Char -> Bool -> KeyboardInfo -> KeyboardInfo
@@ -33,16 +35,27 @@ keyAction _ _        info = info
 -- | Fourth, if there was collision, restore old position and clear acceleration and velocity
 -- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld = updateMyPlayer 
+updateWorld timePassed world = withNewPlayer & projectiles .~ newProjectiles
+    where
+        withNewPlayer = updateMyPlayer timePassed world
 
+        oldProjectiles = world ^. projectiles
+        newProjectiles = 
+            if world ^. keyboardData . fireKeyPressed
+            then newProjectile : oldProjectiles
+            else oldProjectiles
+            where newProjectile = shootBullet (withNewPlayer ^. myPlayer)
 
 updateMyPlayer :: Float -> World -> World
 updateMyPlayer timePassed world = world & myPlayer .~ newPlayer
     where
         oldPlayer = world ^. myPlayer
+        keyboard = world ^. keyboardData
 
-        (deltaVelocity, newDirection) = applyButtonsPress (world ^. keyboardData) oldPlayer
+        deltaVelocity = getNewVelocity keyboard oldPlayer
         deltaVelocity' = mulSV timePassed deltaVelocity
+
+        newDirection = getNewDirection keyboard (oldPlayer ^. direction)
 
         oldVelocity = oldPlayer ^. entityBody . bodyVelocity
         newVelocity = oldVelocity &~ do
@@ -69,6 +82,19 @@ updateEntity timePassed map entity =
             then getNewAnimation timePassed entity (newState /= oldState)
             else []
 
+shootBullet :: Entity -> Entity
+shootBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
+    where 
+        playerPosition = player ^. entityBody . bodyPosition
+        (RectangleBox w h) = player ^. entityBody . bodyCollisionBox 
+        offsets = (w/2 + bulletOffset, h/2)
+        directionMultiplier = 
+            case player ^. direction of 
+                LeftDirection -> -1
+                RightDirection -> 1
+
+        bulletPosition = addPoints playerPosition (mulSV directionMultiplier offsets)        
+
 getNewState :: Entity -> PlayerState
 getNewState entity
     | snd velocity > stopVelocity      = Jumping
@@ -80,18 +106,25 @@ getNewState entity
         velocity = entity ^. entityBody . bodyVelocity
         currState = entity ^? entityData . currentState
 
+getNewDirection :: KeyboardInfo -> Direction -> Direction
+getNewDirection (KeyboardInfo rightKey leftKey _ _) currDirection
+    = case (leftKey, rightKey) of
+        (True, False) -> LeftDirection
+        (False, True) -> RightDirection
+        _             -> currDirection
+
 -- | Should only be used on my player 
-applyButtonsPress :: KeyboardInfo -> Entity -> (Velocity, Direction)
-applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
-    = ((xVelocity, yVelocity), newDirection)
+getNewVelocity :: KeyboardInfo -> Entity -> Velocity
+getNewVelocity (KeyboardInfo rightKey leftKey jumpKey _) entity
+    = (xVelocity, yVelocity)
     where
-        velocityLens = entityBody . bodyVelocity
-        (xVelocity, newDirection) =
+        -- velocityLens = entityBody . bodyVelocity
+        xVelocity =
             case (leftKey, rightKey) of
-                (True, True)   -> (0, entity ^. direction)
-                (False, False) -> (0, entity ^. direction)
-                (True, False)  -> (entity ^. velocityLens . _1 - accelerationRate, LeftDirection)
-                (False, True)  -> (entity ^. velocityLens . _1 + accelerationRate, RightDirection)
+                (True, False)  -> -accelerationRate
+                (False, True)  -> accelerationRate
+                _              -> 0
+
         currState = entity ^? entityData . currentState
         jumpAllowed = currState == Just Idle || currState == Just Running
         -- jumpAllowed = True

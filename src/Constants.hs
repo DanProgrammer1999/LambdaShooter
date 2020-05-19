@@ -30,6 +30,20 @@ entitiesScale :: Float
 entitiesScale = 0.2
 
 -------------------------------
+
+bulletWeight :: Float
+bulletWeight = 0.1
+
+bulletOffset :: Float
+bulletOffset = 0.5
+
+defaultBulletVelocity :: (Float, Float)
+defaultBulletVelocity = (1000, 0)
+
+defaultBulletPower :: Float
+defaultBulletPower = 35
+
+-------------------------------
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 

@@ -53,6 +53,7 @@ updateWorldIO :: Float -> World -> IO World
 updateWorldIO timePassed world 
     =  putStrLn ("Time since last frame: " ++ show timePassed)
     >> putStrLn ("My player details " ++ (world ^. myPlayer & show))
+    >> putStrLn ("Projectiles: " ++ show (world ^. projectiles))
     >> return (updateWorld timePassed world) 
 
 

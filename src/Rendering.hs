@@ -15,7 +15,7 @@ renderWorld world
     <> renderBodies (map _entityBody allEntities) 
     <> renderUI (world ^. myPlayer . entityData)
     where
-        allEntities = world ^. myPlayer : world ^. entities  
+        allEntities = world ^. myPlayer : (world ^. players ++ world ^. projectiles)  
 
 -- | In case we want to see collision (for DEBUG purposes only)
 -- | we need to draw them additionaly here 
