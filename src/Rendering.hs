@@ -22,18 +22,18 @@ renderWorld world
 renderEntities :: [Entity] -> Picture
 renderEntities entities = mconcat pictures  where
     pictures :: [Picture]
-    pictures = map (scale entitiesScale entitiesScale . entityToPicture) entities
+    pictures = map entityToPicture entities
 
 
--- | Render all Entities and translates and flip accordingly. 
--- TODO TOFIX Alex: fix scaling issues
--- TODO TOFIX Alex: fix error on state change
+-- | Render all Entities. Also translates and flip accordingly. 
 entityToPicture :: Entity -> Picture
-entityToPicture entity = pic where
-    pic1 = if isPlayer entity
+entityToPicture entity = scaledAndTranslatedPic where
+    rightPic = if isPlayer entity
         then playerPic
         else entity ^. entityTexture
-    pic = uncurry translate (entity ^. entityBody . bodyPosition) pic1
+    scaledPic = scale entitiesScale entitiesScale rightPic
+    scaledAndTranslatedPic =
+         uncurry translate (entity ^. entityBody . bodyPosition) scaledPic
     animation = getAnimationFromEntity entity
     playerPic = case animation of
         Just a -> 
@@ -57,7 +57,7 @@ bodyToPicture body = uncurry translate (body ^. bodyPosition) pic where
     pic = renderCollisionBox (body ^. bodyCollisionBox)
 
 renderCollisionBox :: CollisionBox -> Picture
-renderCollisionBox (RectangleBox w h) = color getBodyColor $ rectangleSolid w h
+renderCollisionBox (RectangleBox w h) = color getBodyColor $ rectangleWire w h
 renderCollisionBox (CircleBox r) =  color getBodyColor $ circleSolid r
 
 renderMap :: Map -> Picture

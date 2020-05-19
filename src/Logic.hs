@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Logic (handleInput, updateWorld) where
 
 import Graphics.Gloss

@@ -17,8 +17,10 @@ data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriv
 data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
 
 defaultFrameDelay :: Float
-defaultFrameDelay = 0.05
+defaultFrameDelay = 0.02
 
+-- TODO TOFIX Alex: Keep only appropriate sprites in resources folder
+-- so that animations look smooth and nice.
 data Animation = Animation
   { _frameDelay    :: Float      -- ^ How long to wait between frames
   , _frames        :: [Picture]  -- ^ All frames
