@@ -33,22 +33,20 @@ entityToPicture entity = pic where
     pic1 = if isPlayer entity
         then playerPic
         else entity ^. entityTexture
-
     pic = uncurry translate (entity ^. entityBody . bodyPosition) pic1
-
     animation = getAnimationFromEntity entity
     playerPic = case animation of
         Just a -> 
             let foundPic = (if (entity ^. direction) == RightDirection
                 then a ^? frames . element (a ^. curFrame)
                 else a ^? flippedFrames . element (a ^. curFrame)) in 
-            -- let foundPic = (a ^. frames) ^? element (a ^. curFrame) in
                 case foundPic of
                     Just p -> p
                     Nothing ->  error $ "No such animation sprite with index "
                      ++ show (a ^. curFrame) 
         Nothing -> error $ "No such animation with state " ++
-         show (_currentState (entity ^. entityData))
+         show (_currentState (entity ^. entityData)) 
+         ++ "; All states are: " ++ show (entity ^. entityData . animations)
 
 renderBodies ::  [Body] -> Picture
 renderBodies bodies = mconcat pictures where

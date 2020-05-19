@@ -14,6 +14,9 @@ jumpAcceleration = 1000
 defaultPosition :: (Float, Float)
 defaultPosition = (0, 100)
 
+defaultVelocity :: (Float, Float)
+defaultVelocity = (0, 0)
+
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
 stopVelocity = 15
@@ -33,21 +36,21 @@ entitiesScale = 0.2
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 
------ Terrorist (Player)  -----
+----- Player sprites  -----
 terroristIdlePath :: FilePath
-terroristIdlePath = "resources/terrorist1/idle"
+terroristIdlePath  = "resources/pinguin/rifle/idle"
 
 terroristRunPath :: FilePath
-terroristRunPath = "resources/terrorist1/run"
+terroristRunPath   = "resources/pinguin/rifle/run"
 
 terroristDeathPath :: FilePath
-terroristDeathPath = "resources/terrorist1/death"
+terroristDeathPath = "resources/pinguin/rifle/death"
 
 terroristJumpPath :: FilePath
-terroristJumpPath = "resources/terrorist1/jump"
+terroristJumpPath  = "resources/pinguin/rifle/jump"
 
 terroristFallPath :: FilePath
-terroristFallPath = "resources/terrorist1/fall"
+terroristFallPath  = "resources/pinguin/rifle/fall"
 
 
 ----- Pictures  -----

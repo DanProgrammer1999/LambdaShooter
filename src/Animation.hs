@@ -8,14 +8,16 @@ import Codec.Picture.Extra
 import Control.Lens
 import System.Directory (getDirectoryContents)
 
-import Constants
 import Data.Bifunctor
+import Data.List (sort)
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying deriving (Eq, Show) 
+import Constants
+
+data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriving (Eq, Show) 
 data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
 
 defaultFrameDelay :: Float
-defaultFrameDelay = 0.15
+defaultFrameDelay = 0.05
 
 data Animation = Animation
   { _frameDelay    :: Float      -- ^ How long to wait between frames
@@ -23,38 +25,46 @@ data Animation = Animation
   , _flippedFrames :: [Picture]  -- ^ Flipped frames (for Left Direction actions)
   , _waitFor       :: Float      -- ^ Time until next frame
   , _curFrame      :: Int        -- ^ Current number of frame
+  , _isOnce        :: Bool       -- ^ Should the animation by cyclic or played once?
   }
-
 makeLenses ''Animation
+
+instance Show Animation where
+  show (Animation _ frames _ _ curFrame _) =
+    " frames length: " ++ show (length frames) ++
+    "; CurFrame: " ++ show curFrame
 
 updateAnimation :: Float -> Animation -> Animation
 updateAnimation elapsed a
   | elapsed > _waitFor a =
       a { _waitFor  = a ^. frameDelay
-        , _curFrame = (a ^. curFrame + 1) `mod` length (a ^. frames)
+        , _curFrame = if _isOnce a
+             then min (a ^. curFrame + 1) (length (a ^. frames) - 1)
+             else (a ^. curFrame + 1) `mod` length (a ^. frames)
         }
   | otherwise = a { _waitFor = (a ^. waitFor) - elapsed }
 
-animationFromImages :: [Image PixelRGBA8] -> Animation
-animationFromImages imgs = Animation {
+animationFromImages :: [Image PixelRGBA8] -> Bool -> Animation
+animationFromImages imgs isOnce = Animation {
     _frameDelay = defaultFrameDelay
   , _frames = pics
   , _flippedFrames = flippedPics
   , _waitFor = defaultFrameDelay -- maybe we should divide by simulationRate
   , _curFrame = 0
+  , _isOnce = isOnce
 } where
   pics = map fromImageRGBA8 imgs
   flippedPics = map (fromImageRGBA8.flipHorizontally) imgs 
 
 -- | loads all .pngs from a given folder and construct animation
-loadAnimation :: FilePath -> IO Animation
-loadAnimation filepath = do
+loadAnimation :: FilePath -> Bool -> IO Animation
+loadAnimation filepath isOnce = do
   picFiles <- getDirectoryContents filepath
-  let filteredPicFiles = filter (\e -> e `notElem` [".", ".."]) picFiles
+  let filteredPicFiles = sort $ filter (\e -> e `notElem` [".", ".."]) picFiles
   -- Better to use crossplatform concatenation and not '/' for unix-like only machines 
   let relativePicFiles = map ((filepath ++ "/") ++) filteredPicFiles
   images <- mapM loadImage relativePicFiles
-  return $ animationFromImages images
+  return $ animationFromImages images isOnce
 
 -- TODO change to return IO (Either Image PixelRGBA8)
 -- | loads single image from a given filepath.
@@ -84,28 +94,28 @@ dynamicImageToPicture :: DynamicImage -> Picture
 dynamicImageToPicture = fromImageRGBA8.convertRGBA8
 
 scaleAnimation :: Float  -> Animation -> Animation
-scaleAnimation scaleFactor anima = anima & frames %~ (map (scale scaleFactor scaleFactor))
+scaleAnimation scaleFactor anima = anima & frames %~ map (scale scaleFactor scaleFactor)
 
 loadPlayerAnimations :: IO [(PlayerState, Animation)]
 loadPlayerAnimations = do
     putStrLn "Loading player animations..."
-    let stateAnimations =
-         map (Data.Bifunctor.second loadAnimation) allTerroristAnimationPathes
-    let states = map fst stateAnimations
+    let stateAnimations = map f allPlayerAnimationsInfo
+    let states = map fst stateAnimations;
     anims <- mapM snd stateAnimations
     let animationTable = zip states anims
     print states
     putStrLn "Player animations are loaded!"
-    return animationTable
+    return animationTable where
+        f (s, path, isOnce) =  (s, loadAnimation path isOnce)
 
 -- TODO TOFIX Alex: player textures for different states need to be aligned properly
-allTerroristAnimationPathes :: [(PlayerState, FilePath)]
-allTerroristAnimationPathes = [
-    (Idle, terroristIdlePath),
-    (Running, terroristRunPath),
-    (Dying, terroristDeathPath),
-    (Jumping, terroristJumpPath),
-    (Falling, terroristFallPath)
+allPlayerAnimationsInfo :: [(PlayerState, FilePath, Bool)]
+allPlayerAnimationsInfo = [
+    (Idle,    terroristIdlePath,   False),
+    (Running, terroristRunPath,    False),
+    (Dying,   terroristDeathPath,  True),
+    (Jumping, terroristJumpPath,   True),
+    (Falling, terroristFallPath,   True)
     ]
 
 -- | makes default stab animation. Good to use with Maybe or Either
@@ -116,4 +126,5 @@ getDefaultAnimation  = Animation {
   , _flippedFrames = [getDefaultPicture]
   , _waitFor = defaultFrameDelay -- maybe we should divide by simulationRate
   , _curFrame = 0
+  , _isOnce = False
 }

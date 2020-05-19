@@ -33,7 +33,7 @@ keyAction _ _        = id
 -- | Fourth, if there was collision, restore old position and clear acceleration and velocity
 -- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = updateMyPlayer timePassed world
+updateWorld = updateMyPlayer 
 
 
 updateMyPlayer :: Float -> World -> World
@@ -59,22 +59,23 @@ updateEntity :: Float -> Map -> Entity -> Entity
 updateEntity timePassed map entity =
     entity &~ do
         entityBody %= updateBody timePassed map
-        entityData . currentState .= getState entity
-        -- this will update only for players and ignored for other entities
-        -- entityData . animations .= newAnimationTable
+        entityData . animations .= newAnimationTable
+        entityData . currentState .= newState
     where
+        oldState = fromMaybe Idle $ entity ^? entityData . currentState
+        newState = getNewState entity
         newAnimationTable =
             if isPlayer entity
-            then getAnimation timePassed entity
+            then getNewAnimation timePassed entity (newState /= oldState)
             else []
 
-getState :: Entity -> PlayerState
-getState entity  
-    | snd velocity > stopVelocity      = Jumping
-    | snd velocity < stopVelocity      = Falling
-    | abs(fst velocity) > stopVelocity = Running
-    | currState == Just Jumping        = Falling
-    | otherwise                        = Idle
+getNewState :: Entity -> PlayerState
+getNewState entity
+    | snd velocity > stopVelocity    = Jumping
+    | snd velocity < (-stopVelocity) = Falling
+    | fst velocity > stopVelocity    = Running
+    | fst velocity < (-stopVelocity) = Running
+    | otherwise                      = Idle
     where
         velocity = entity ^. entityBody . bodyVelocity
         currState = entity ^? entityData . currentState
@@ -104,15 +105,17 @@ checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 
         box1 = entity1 ^. entityBody . bodyCollisionBox
         box2 = entity2 ^. entityBody . bodyCollisionBox
 
-getAnimation :: Float -> Entity -> [(PlayerState, Animation)]
-getAnimation timePassed player = newPlayerTable
+getNewAnimation :: Float -> Entity -> Bool -> [(PlayerState, Animation)]
+getNewAnimation timePassed player wasStateChange = newPlayerTable
     where
         -- | Update Animation should be done for all players
-        curState = fromMaybe Idle (player ^? entityData . currentState)
+        curState = fromMaybe EmptyState (player ^? entityData . currentState)
         -- | Calculate new Animation
         oldPlayerAnimation = fromMaybe getDefaultAnimation $ getAnimationFromEntity player
-        newPlayerAnimation = updateAnimation timePassed oldPlayerAnimation
+        newPlayerAnimation = newAnimation where
+            anim = updateAnimation timePassed oldPlayerAnimation
+            newAnimation = if wasStateChange then anim {_curFrame = 0} else anim
         -- | Calculate new Animation Table
         oldPlayerTable = player ^. entityData . animations
         newPlayerTable = (curState, newPlayerAnimation)
-            : filter (\(state, _) -> state == curState) oldPlayerTable
+            : filter (\(state, _) -> state /= curState) oldPlayerTable

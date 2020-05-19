@@ -25,6 +25,7 @@ data Weapon
         , _waveHitRadius     :: Float
         }
     deriving Show
+makeLenses ''Weapon
 
 type Position = Point
 type Velocity = Point
@@ -37,6 +38,7 @@ data CollisionBox
     | CircleBox
         {_radius :: Float } 
     deriving Show
+makeLenses ''CollisionBox
 
 data Body = Body
     { _bodyPosition     :: Position
@@ -45,6 +47,7 @@ data Body = Body
     , _bodyCollisionBox :: CollisionBox
     , _collisionHappened :: Bool
     } deriving Show
+makeLenses ''Body
 
 data EntityData
     = PlayerData
@@ -58,6 +61,7 @@ data EntityData
     }
     | ProjectileData
     { _projectilePower :: Float }
+makeLenses ''EntityData
 
 data Entity
     = Entity
@@ -66,9 +70,7 @@ data Entity
     , _entityData    :: EntityData
     , _direction     :: Direction
     }
-instance Show Entity where 
-    show (Entity body _ eData direction) = 
-        show body ++ "; State:" ++ show (_currentState eData) ++ "; Direction: " ++ show direction
+makeLenses ''Entity
 
 data Block = Block
     { _blockPosition :: Position
@@ -76,6 +78,7 @@ data Block = Block
     , _blockWidth    :: Float
     , _blockHeight   :: Float
     }
+makeLenses ''Block
 
 data Map = Map
     { _background :: Picture
@@ -83,6 +86,7 @@ data Map = Map
     , _maxHeight  :: Float
     , _blocks     :: [Block]
     }
+makeLenses ''Map
 
 data KeyboardInfo = KeyboardInfo
     { _rightKeyPressed   :: Bool
@@ -93,6 +97,7 @@ data KeyboardInfo = KeyboardInfo
 
 keyboardInfo :: KeyboardInfo
 keyboardInfo = KeyboardInfo False False False False
+makeLenses ''KeyboardInfo
 
 data World = World
     { _worldMap     :: Map
@@ -100,16 +105,16 @@ data World = World
     , _myPlayer     :: Entity
     , _keyboardData :: KeyboardInfo
     }
-
-makeLenses ''Weapon
-makeLenses ''CollisionBox
-makeLenses ''Body
-makeLenses ''EntityData
-makeLenses ''Entity
-makeLenses ''Block
-makeLenses ''Map
-makeLenses ''KeyboardInfo
 makeLenses ''World
+
+instance Show Entity where 
+    show e@(Entity body _ eData direction) = 
+        show body ++ 
+        "; State:" ++ show (_currentState eData) ++ 
+        "; Direction: " ++ show direction ++ 
+        "; AnimationInfo: " ++ show 
+            (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+
 
 isProjectile :: Entity -> Bool
 isProjectile entity
