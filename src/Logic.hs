@@ -30,13 +30,19 @@ keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = withNewPlayer & projectiles .~ updatedProjectiles
+updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectiles
     where
         withNewPlayer = updateMyPlayer timePassed world
 
         oldProjectiles = withNewPlayer ^. projectiles
         updateProjectile = over entityBody $ updateBody timePassed world
         updatedProjectiles = updateProjectile <$> oldProjectiles
+
+        -- delete projectiles with collision or out of world
+        projectileFilter projectile 
+            =  not (projectile ^. entityBody . collisionHappened)
+            && not (isOutOfBounds (projectile ^. entityBody))
+        filteredProjectiles = filter projectileFilter updatedProjectiles
 
 updateMyPlayer :: Float -> World -> World
 updateMyPlayer timePassed world = world &~

@@ -51,6 +51,12 @@ maxShootingCooldown :: Float
 maxShootingCooldown = 0.33
 
 -------------------------------
+
+worldBoundary :: Float
+worldBoundary = 10000
+
+-------------------------------
+
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 

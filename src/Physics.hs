@@ -36,6 +36,10 @@ updateBody timePassed world body = body &~
         collisionVelocity = mulSV collisionVelocityRate newVelocity
         newVelocity' = replaceIfCollision (xCollision, yCollision) newVelocity collisionVelocity
 
+isOutOfBounds :: Body -> Bool
+isOutOfBounds (Body (x, y) _ _ _ _) 
+    = abs x > worldBoundary || abs y > worldBoundary
+
 gravityAcceleration :: Body -> Float
 gravityAcceleration body = - fallAcceleration * body ^. weight
 
