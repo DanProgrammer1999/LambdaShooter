@@ -64,20 +64,23 @@ backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 
 ----- Player sprites  -----
-terroristIdlePath :: FilePath
-terroristIdlePath  = "resources/pinguin/rifle/idle"
+penguinIdlePath :: FilePath
+penguinIdlePath  = "resources/penguin/idle"
 
-terroristRunPath :: FilePath
-terroristRunPath   = "resources/pinguin/rifle/run"
+penguinRunPath :: FilePath
+penguinRunPath   = "resources/penguin/run"
 
-terroristDeathPath :: FilePath
-terroristDeathPath = "resources/pinguin/rifle/death"
+penguinDeathPath :: FilePath
+penguinDeathPath = "resources/penguin/death"
 
-terroristJumpPath :: FilePath
-terroristJumpPath  = "resources/pinguin/rifle/jump"
+penguinJumpPath :: FilePath
+penguinJumpPath  = "resources/penguin/jump"
 
-terroristFallPath :: FilePath
-terroristFallPath  = "resources/pinguin/rifle/fall"
+penguinFallPath :: FilePath
+penguinFallPath  = "resources/penguin/fall"
+
+penguinShootingPath :: FilePath
+penguinShootingPath = "resources/penguin/idle_shooting"
 
 
 ----- Pictures  -----

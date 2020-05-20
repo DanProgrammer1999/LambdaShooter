@@ -70,15 +70,14 @@ updateMyPlayer timePassed world = world &~
             entityBody . bodyVelocity .= newVelocity
             entityBody %= updateBody timePassed world
 
-        oldState = fromMaybe Idle $ oldPlayer ^? entityData . currentState
-        newState = getNewState newPlayer
-
-        newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
-
         willShoot = canShoot && requestedShoot
             where
                 requestedShoot = world ^. keyboardData . fireKeyPressed
                 canShoot = world ^. shootingCooldown == 0
+        
+        oldState = fromMaybe EmptyState $ oldPlayer ^? entityData . currentState
+        newState = if willShoot then Shooting else getNewState newPlayer
+        newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
 
 createBullet :: Entity -> Entity
 createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)

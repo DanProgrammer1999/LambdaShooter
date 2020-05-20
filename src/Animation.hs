@@ -13,7 +13,7 @@ import Data.List (sort)
 
 import Constants
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriving (Eq, Show) 
+data PlayerState = Idle | Running | Jumping | Falling | Dying | Shooting | EmptyState deriving (Eq, Show) 
 data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
 
 defaultFrameDelay :: Float
@@ -113,11 +113,12 @@ loadPlayerAnimations = do
 -- TODO TOFIX Alex: player textures for different states need to be aligned properly
 allPlayerAnimationsInfo :: [(PlayerState, FilePath, Bool)]
 allPlayerAnimationsInfo = [
-    (Idle,    terroristIdlePath,   False),
-    (Running, terroristRunPath,    False),
-    (Dying,   terroristDeathPath,  True),
-    (Jumping, terroristJumpPath,   True),
-    (Falling, terroristFallPath,   True)
+    (Idle,     penguinIdlePath,     False),
+    (Running,  penguinRunPath,      False),
+    (Dying,    penguinDeathPath,    True),
+    (Jumping,  penguinJumpPath,     True),
+    (Falling,  penguinFallPath,     True),
+    (Shooting, penguinShootingPath, True)
     ]
 
 -- | makes default stab animation. Good to use with Maybe or Either

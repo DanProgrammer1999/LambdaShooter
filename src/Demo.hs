@@ -20,7 +20,7 @@ sampleMap =
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
-sampleBlockTexture w h = color red $ rectangleSolid w h
+sampleBlockTexture w h = color blue $ rectangleSolid w h
 
 
 makePlayer :: String -> [(PlayerState, Animation)] -> CollisionBox -> Entity

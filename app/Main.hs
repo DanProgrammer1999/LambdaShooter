@@ -22,13 +22,13 @@ simulationRate :: Int
 simulationRate = 30
 
 main :: IO ()
-main = debug
+main = release
 
 release :: IO ()
 release = do
     bgPic <- loadPicture backgroundPath
     playerAnimationTable <- loadPlayerAnimations
-    let world = sampleWorld bgPic playerAnimationTable (RectangleBox 50 50)
+    let world = sampleWorld bgPic playerAnimationTable (RectangleBox 40 80)
     play FullScreen white simulationRate world renderWorld handleInput updateWorld
 
 debug :: IO ()

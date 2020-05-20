@@ -56,11 +56,11 @@ getPlayerPicture player
             LeftDirection  -> animation ^? flippedFrames . element (animation ^. curFrame)
         playerPic = fromMaybe getDefaultPicture foundPic
 
-        playerName = color green $ uncurry translate namePosition scaled
+        playerName = color red $ uncurry translate namePosition scaled
             where
                 namePosition = (-75, 250)
-                scaled = scale 0.5 0.5 namePicture
-                namePicture = Text (fromMaybe "" (player ^? entityData . name))
+                scaled = scale 0.75 0.75 namePicture
+                namePicture = text (fromMaybe "" (player ^? entityData . name))
 
 renderBodies ::  [Body] -> Picture
 renderBodies bodies = mconcat pictures where
