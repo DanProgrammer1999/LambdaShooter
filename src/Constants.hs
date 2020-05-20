@@ -20,6 +20,9 @@ defaultPosition = (0, 100)
 defaultVelocity :: (Float, Float)
 defaultVelocity = (0, 0)
 
+maxHealth :: Float 
+maxHealth = 100
+
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
 stopVelocity = 1

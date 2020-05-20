@@ -23,9 +23,8 @@ sampleBlockTexture :: Float -> Float -> Picture
 sampleBlockTexture w h = color red $ rectangleSolid w h
 
 
--- TODO TOFIX (ALL) "Make a correct CollisionBox for players".
 makePlayer :: String -> [(PlayerState, Animation)] -> CollisionBox -> Entity
 makePlayer name animationTable  colBox =
      Entity playerBody Blank playerData RightDirection where
-        playerData = PlayerData [] 0 100.0 0 name Idle animationTable 
+        playerData = PlayerData [] 0 50 0 name Idle animationTable 
         playerBody = Body defaultPosition defaultVelocity playerWeight colBox False

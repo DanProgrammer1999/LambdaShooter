@@ -116,6 +116,7 @@ instance Show Entity where
         | isPlayer e = 
             show body ++ 
             "; State:" ++ show (_currentState eData) ++ 
+            "; Health:" ++ show (fromMaybe 0 (eData ^? health)) ++
             "; Direction: " ++ show direction ++ 
             "; AnimationInfo: " ++ show 
                 (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
