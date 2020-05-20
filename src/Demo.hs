@@ -27,4 +27,4 @@ makePlayer :: String -> [(PlayerState, Animation)] -> CollisionBox -> Entity
 makePlayer name animationTable  colBox =
      Entity playerBody Blank playerData RightDirection where
         playerData = PlayerData [] 0 100.0 0 name Idle animationTable 
-        playerBody = Body defaultPosition defaultVelocity 10.0 colBox False
+        playerBody = Body defaultPosition defaultVelocity playerWeight colBox False

@@ -2,6 +2,9 @@ module Constants where
 
 import Graphics.Gloss
 
+playerWeight :: Float
+playerWeight = 10
+
 accelerationRate :: Float
 accelerationRate = 250
 
@@ -38,14 +41,14 @@ bulletOffset :: Float
 bulletOffset = 10
 
 defaultBulletVelocity :: (Float, Float)
-defaultBulletVelocity = (1000, 0)
+defaultBulletVelocity = (50, 0)
 
 defaultBulletPower :: Float
 defaultBulletPower = 35
 
 -- in seconds
 maxShootingCooldown :: Float 
-maxShootingCooldown = 0.5
+maxShootingCooldown = 0.33
 
 -------------------------------
 backgroundPath :: FilePath

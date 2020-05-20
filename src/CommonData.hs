@@ -124,9 +124,10 @@ instance Show Entity where
             "; Direction: " ++ show direction ++ "\n"
 
 makeBullet :: Float -> Position -> Direction -> Entity
-makeBullet bulletPower origin = Entity body texture (ProjectileData bulletPower)  
+makeBullet bulletPower origin direction = Entity body texture (ProjectileData bulletPower) direction
     where
-        body = Body origin defaultBulletVelocity bulletWeight bulletCollisionBox False
+        velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
+        body = Body origin velocity bulletWeight bulletCollisionBox False
         texture = color black $ circleSolid 5
 
 bulletCollisionBox :: CollisionBox

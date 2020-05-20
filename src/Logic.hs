@@ -19,7 +19,7 @@ handleInput (EventKey (Char c) state _ _) world
     = world & keyboardData %~ keyAction (toLower c) (state == Down)
 handleInput (EventKey (SpecialKey KeySpace) state _ _) world
     = world & keyboardData %~ keyAction ' ' (state == Down)
-handleInput (EventKey (MouseButton LeftButton) state _ _) world 
+handleInput (EventKey (MouseButton LeftButton) state _ _) world
     = world & keyboardData . fireKeyPressed .~ (state == Down)
 handleInput _ world = world
 
@@ -30,78 +30,62 @@ keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = withNewPlayer &~
-    do
-        projectiles .= newProjectiles
-        shootingCooldown .= newCooldown
+updateWorld timePassed world = withUpdatedProjectiles
     where
         withNewPlayer = updateMyPlayer timePassed world
-        oldProjectiles = world ^. projectiles
-        
-        willShoot = canShoot && requestedShoot
-            where
-                requestedShoot = world ^. keyboardData . fireKeyPressed  
-                canShoot = world ^. shootingCooldown == 0
-        
-        newCooldown = 
-            if willShoot 
-            then maxShootingCooldown 
-            else max 0 (world ^. shootingCooldown - timePassed)
+        withUpdatedProjectiles = withNewPlayer & projectiles %~ fmap updateProjectile
 
-        newProjectiles = 
-            if willShoot
-            then newProjectile : oldProjectiles
-            else oldProjectiles
-            where newProjectile = createBullet (withNewPlayer ^. myPlayer)
+        updateProjectile :: Entity -> Entity
+        updateProjectile = over entityBody $ updateBody timePassed (world ^. worldMap)
 
 updateMyPlayer :: Float -> World -> World
-updateMyPlayer timePassed world = world & myPlayer .~ newPlayer
+updateMyPlayer timePassed world = world &~
+    do
+        myPlayer .= newPlayer
+        myPlayer . entityData . animations .= newAnimations
+        myPlayer . entityData . currentState .= newState
+        myPlayer . direction %= getNewDirection keyboard
+
+        projectiles %=
+            (\oldProjectiles ->
+                if willShoot then createBullet newPlayer : oldProjectiles else oldProjectiles
+            )
+        shootingCooldown %=
+            (\cooldown -> if willShoot then maxShootingCooldown else max 0 (cooldown - timePassed))
     where
-        oldPlayer = world ^. myPlayer
         keyboard = world ^. keyboardData
-
-        deltaVelocity = getNewVelocity keyboard oldPlayer
-        deltaVelocity' = mulSV timePassed deltaVelocity
-
-        newDirection = getNewDirection keyboard (oldPlayer ^. direction)
+        oldPlayer = world ^. myPlayer
 
         oldVelocity = oldPlayer ^. entityBody . bodyVelocity
-        newVelocity = oldVelocity &~ do
-            _1 .= fst deltaVelocity'
-            _2 += snd deltaVelocity'
+        deltaVelocity = mulSV timePassed $ getNewVelocity keyboard oldPlayer
+        newVelocity = deltaVelocity & _2 +~ snd oldVelocity
 
-        newPlayer = updateEntity timePassed (world ^. worldMap) withVelocity
+        newPlayer = oldPlayer &~ do
+            entityBody . bodyVelocity .= newVelocity
+            entityBody %= updateBody timePassed (world ^. worldMap)
+
+        oldState = fromMaybe Idle $ oldPlayer ^? entityData . currentState
+        newState = getNewState newPlayer
+
+        newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
+
+        willShoot = canShoot && requestedShoot
             where
-                withDirection = oldPlayer & direction .~ newDirection
-                withVelocity = withDirection & entityBody . bodyVelocity .~ newVelocity
-
-
-updateEntity :: Float -> Map -> Entity -> Entity
-updateEntity timePassed map entity =
-    entity &~ do
-        entityBody %= updateBody timePassed map
-        entityData . animations .= newAnimationTable
-        entityData . currentState .= newState
-    where
-        oldState = fromMaybe Idle $ entity ^? entityData . currentState
-        newState = getNewState entity
-        newAnimationTable =
-            if isPlayer entity
-            then getNewAnimation timePassed entity (newState /= oldState)
-            else []
+                requestedShoot = world ^. keyboardData . fireKeyPressed
+                canShoot = world ^. shootingCooldown == 0
 
 createBullet :: Entity -> Entity
 createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
-    where 
+    where
         (x, y) = player ^. entityBody . bodyPosition
-        (RectangleBox w _) = player ^. entityBody . bodyCollisionBox 
-        directionMultiplier = 
-            case player ^. direction of 
+        (RectangleBox w _) = player ^. entityBody . bodyCollisionBox
+        directionMultiplier =
+            case player ^. direction of
                 LeftDirection -> -1
                 RightDirection -> 1
-        
+
         xOffset = directionMultiplier*w/2 + bulletOffset
-        bulletPosition = (x + xOffset, y)  
+        bulletPosition = (x + xOffset, y)
 
 getNewState :: Entity -> PlayerState
 getNewState entity
