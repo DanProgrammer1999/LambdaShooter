@@ -27,7 +27,7 @@ stopVelocity = 1
 -- | Velocity multiplied by this on collision
 -- | Used to avoid too abrupt velocity cut on fall
 collisionVelocityRate :: Float
-collisionVelocityRate = 0.1
+collisionVelocityRate = 0.15
 
 entitiesScale :: Float
 entitiesScale = 0.2

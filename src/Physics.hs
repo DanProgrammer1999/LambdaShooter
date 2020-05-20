@@ -8,8 +8,8 @@ import CommonData
 import Constants
 
 
-updateBody :: Float -> Map -> Body -> Body
-updateBody timePassed map body = body &~
+updateBody :: Float -> World -> Body -> Body
+updateBody timePassed world body = body &~
     do 
         bodyPosition .= newPosition'
         bodyVelocity .= newVelocity'
@@ -23,8 +23,8 @@ updateBody timePassed map body = body &~
         (xUpdate, yUpdate) = (oldPosition & _1 .~ newX, oldPosition & _2 .~ newY)
 
         collisionBox = body ^. bodyCollisionBox
-        xCollision = detectMapCollision map collisionBox xUpdate
-        yCollision = detectMapCollision map collisionBox yUpdate
+        xCollision = detectMapCollision (world ^. worldMap) collisionBox xUpdate
+        yCollision = detectMapCollision (world ^. worldMap) collisionBox yUpdate
 
         replaceIfCollision isCollision original replace = (x, y)
             where
@@ -36,9 +36,18 @@ updateBody timePassed map body = body &~
         collisionVelocity = mulSV collisionVelocityRate newVelocity
         newVelocity' = replaceIfCollision (xCollision, yCollision) newVelocity collisionVelocity
 
-
 gravityAcceleration :: Body -> Float
 gravityAcceleration body = - fallAcceleration * body ^. weight
+
+detectEntitiesCollision :: [Entity] -> Body -> Bool
+detectEntitiesCollision entities body = or $ checkEntityCollision <$> entities
+    where
+        checkEntityCollision (Entity entityBody' _ _ _) 
+            = detectCollision 
+                (body ^. bodyPosition) 
+                (entityBody' ^. bodyPosition) 
+                (body ^. bodyCollisionBox)
+                (entityBody' ^. bodyCollisionBox)
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
 detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
@@ -65,15 +74,24 @@ detectCollision
 detectCollision c1 c2 (CircleBox r1) (CircleBox r2)
     = distance c1 c2 < r1 + r2
 
-detectCollision
-    (xr, yr)
-    (xc, yc)
+detectCollision 
+    (xRect, yRect)
+    (xCircle, yCircle)
     (RectangleBox width height)
-    (CircleBox r)
-    = distance (testX, testY) (xc, yc) <= r
+    (CircleBox radius) 
+    | notColliding = False
+    | otherwise    = 
+        xDistance <= width/2 
+        || yDistance <= height/2
+        || cornerDistance < radius^2
     where
-        testX = if xc < xr then xr else xr + width
-        testY = if yc < yr then yr else yr + height
+        -- "shortcut" for some cases to simplify the calculations
+        notColliding = xDistance > (width/2 + radius) || yDistance > (height/2 + radius) 
+
+        xDistance = abs (xCircle - xRect)
+        yDistance = abs (yCircle - yRect)
+
+        cornerDistance = (xDistance - width/2)^2 + (yDistance - height/2)^2
 
 detectCollision p1 p2 c@(CircleBox _) r@(RectangleBox _ _)
     = detectCollision p2 p1 r c

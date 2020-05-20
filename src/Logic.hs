@@ -30,13 +30,13 @@ keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
 updateWorld :: Float -> World -> World
-updateWorld timePassed world = withUpdatedProjectiles
+updateWorld timePassed world = withNewPlayer & projectiles .~ updatedProjectiles
     where
         withNewPlayer = updateMyPlayer timePassed world
-        withUpdatedProjectiles = withNewPlayer & projectiles %~ fmap updateProjectile
 
-        updateProjectile :: Entity -> Entity
-        updateProjectile = over entityBody $ updateBody timePassed (world ^. worldMap)
+        oldProjectiles = withNewPlayer ^. projectiles
+        updateProjectile = over entityBody $ updateBody timePassed world
+        updatedProjectiles = updateProjectile <$> oldProjectiles
 
 updateMyPlayer :: Float -> World -> World
 updateMyPlayer timePassed world = world &~
@@ -62,7 +62,7 @@ updateMyPlayer timePassed world = world &~
 
         newPlayer = oldPlayer &~ do
             entityBody . bodyVelocity .= newVelocity
-            entityBody %= updateBody timePassed (world ^. worldMap)
+            entityBody %= updateBody timePassed world
 
         oldState = fromMaybe Idle $ oldPlayer ^? entityData . currentState
         newState = getNewState newPlayer
