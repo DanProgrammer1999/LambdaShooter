@@ -1,35 +1,51 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Animation where
 
 import Graphics.Gloss
 import Graphics.Gloss.Juicy
 import Codec.Picture
 import Codec.Picture.Extra
-import Control.Lens
+import Control.Lens hiding ((.=))
 import System.Directory (getDirectoryContents)
+import Data.Aeson
+import GHC.Generics
 
 import Data.Bifunctor
 import Data.List (sort)
 
 import Constants
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriving (Eq, Show) 
-data Direction =  LeftDirection | RightDirection deriving (Eq, Show)
+data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriving (Generic, Eq, Show) 
+data Direction =  LeftDirection | RightDirection deriving (Generic, Eq, Show)
+
+instance ToJSON   Direction
+instance FromJSON Direction
+
+instance ToJSON   PlayerState
+instance FromJSON PlayerState
+
+type PlayerAnimationTable = [(PlayerState, Animation)]
 
 defaultFrameDelay :: Float
 defaultFrameDelay = 0.02
 
--- TODO TOFIX Alex: Keep only appropriate sprites in resources folder
--- so that animations look smooth and nice.
+-- | TODO TOFIX Alex: Keep only appropriate sprites in resources folder
+-- so that animations look smooth and nice(cut bad frames).
+-- | Note: we can swtich to array for O(1) index-based access.
+-- That would be useful since we always access frames by index.
 data Animation = Animation
   { _frameDelay    :: Float      -- ^ How long to wait between frames
-  , _frames        :: [Picture]  -- ^ All frames
+  , _frames        :: [Picture]  -- ^ All frames 
   , _flippedFrames :: [Picture]  -- ^ Flipped frames (for Left Direction actions)
   , _waitFor       :: Float      -- ^ Time until next frame
   , _curFrame      :: Int        -- ^ Current number of frame
   , _isOnce        :: Bool       -- ^ Should the animation by cyclic or played once?
   }
 makeLenses ''Animation
+
 
 instance Show Animation where
   show (Animation _ frames _ _ curFrame _) =
@@ -98,7 +114,7 @@ dynamicImageToPicture = fromImageRGBA8.convertRGBA8
 scaleAnimation :: Float  -> Animation -> Animation
 scaleAnimation scaleFactor anima = anima & frames %~ map (scale scaleFactor scaleFactor)
 
-loadPlayerAnimations :: IO [(PlayerState, Animation)]
+loadPlayerAnimations :: IO PlayerAnimationTable
 loadPlayerAnimations = do
     putStrLn "Loading player animations..."
     let stateAnimations = map f allPlayerAnimationsInfo
@@ -126,7 +142,7 @@ getDefaultAnimation  = Animation {
     _frameDelay = defaultFrameDelay
   , _frames = [getDefaultPicture]
   , _flippedFrames = [getDefaultPicture]
-  , _waitFor = defaultFrameDelay -- maybe we should divide by simulationRate
+  , _waitFor = defaultFrameDelay
   , _curFrame = 0
   , _isOnce = False
 }

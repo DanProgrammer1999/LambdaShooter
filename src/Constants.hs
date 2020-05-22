@@ -2,6 +2,22 @@ module Constants where
 
 import Graphics.Gloss
 
+----- Networking ------
+defaultIP :: String
+defaultIP  = "127.0.0.1"
+
+defaultPort :: Int
+defaultPort = 3579
+
+-- | how often to sent data (for both client & server)
+-- | 1000000 is 1 second.
+delaySending :: Int
+delaySending = 10000
+
+----- Physics -----
+simulationRate :: Int
+simulationRate = 60
+
 accelerationRate :: Float
 accelerationRate = 250
 
