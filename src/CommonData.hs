@@ -6,17 +6,12 @@ module CommonData where
 
 import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
-<<<<<<< HEAD
 import Control.Lens hiding ((.=))
-=======
 import Graphics.Gloss
-import Control.Lens
->>>>>>> origin
 import Data.Maybe
 import GHC.Generics
 import Data.Aeson
 
-import Constants
 import Animation
 import Constants
 
