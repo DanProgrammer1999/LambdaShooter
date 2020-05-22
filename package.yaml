@@ -32,6 +32,13 @@ library:
     - JuicyPixels
     - JuicyPixels-extra
     - websockets
+    - mtl
+    - network
+    - text
+    - aeson
+    - stm
+    - random
+
 executables:
   shooter-exe:
     main:                Main.hs
@@ -49,7 +56,12 @@ executables:
     - JuicyPixels
     - JuicyPixels-extra
     - websockets
-
+    - mtl
+    - network
+    - text
+    - aeson
+    - stm
+    - random
 tests:
   shooter-test:
     main:                Spec.hs
