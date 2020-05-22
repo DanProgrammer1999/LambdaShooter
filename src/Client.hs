@@ -106,7 +106,7 @@ updateWorldIO otherInfo ourInfo playerAnimationTable timePassed world  = do
     let newEntities = map (entityFromClientInfo playerAnimationTable) clientsInfoIO :: [Entity]
     let playerID = _entityID $ world ^. myPlayer
     let newEntitiesWithoutMe = filter ((playerID /=). _entityID) newEntities
-    let newWorld = updateWorld timePassed world {_entities = newEntitiesWithoutMe}
+    let newWorld = updateWorld timePassed world {_players = newEntitiesWithoutMe}
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo (clientInfoFromEntity $ newWorld ^. myPlayer)
     -- | update new world with entites from the server.

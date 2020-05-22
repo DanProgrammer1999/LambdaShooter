@@ -18,7 +18,7 @@ import Data.List (sort)
 
 import Constants
 
-data PlayerState = Idle | Running | Jumping | Falling | Dying | EmptyState deriving (Generic, Eq, Show) 
+data PlayerState = Idle | Running | Jumping | Falling | Dying | Shooting | EmptyState deriving (Generic, Eq, Show) 
 data Direction =  LeftDirection | RightDirection deriving (Generic, Eq, Show)
 
 instance ToJSON   Direction
@@ -126,7 +126,6 @@ loadPlayerAnimations = do
     return animationTable where
         f (s, path, isOnce) =  (s, loadAnimation path isOnce)
 
--- TODO TOFIX Alex: player textures for different states need to be aligned properly
 allPlayerAnimationsInfo :: [(PlayerState, FilePath, Bool)]
 allPlayerAnimationsInfo = [
     (Idle,     penguinIdlePath,     False),

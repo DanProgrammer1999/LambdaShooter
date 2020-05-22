@@ -8,9 +8,9 @@ import CommonData
 import Constants
 
 sampleWorld :: Picture  -> ID -> Name -> [(PlayerState, Animation)] -> CollisionBox-> World
-sampleWorld background uniqueID name animationTable  playerColBox = World
-    (Map background 1000000 10000 sampleMap) []
-     (makePlayer uniqueID name animationTable playerColBox) keyboardInfo
+sampleWorld background uniqueID name animationTable playerColBox = World
+    (Map background 1000000 10000 sampleMap) [] []
+     (makePlayer uniqueID name animationTable playerColBox) keyboardInfo maxShootingCooldown
 
 sampleMap = 
     [

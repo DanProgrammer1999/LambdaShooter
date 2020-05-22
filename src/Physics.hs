@@ -46,7 +46,7 @@ gravityAcceleration body = - fallAcceleration * body ^. weight
 detectEntitiesCollision :: [Entity] -> Body -> Bool
 detectEntitiesCollision entities body = or $ checkEntityCollision <$> entities
     where
-        checkEntityCollision (Entity entityBody' _ _ _) 
+        checkEntityCollision (Entity _ entityBody' _ _ _) 
             = detectCollision 
                 (body ^. bodyPosition) 
                 (entityBody' ^. bodyPosition) 
