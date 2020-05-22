@@ -93,6 +93,10 @@ data Entity
     } deriving Generic
 makeLenses ''Entity
 
+-- | Default id for bullets.
+bulletID :: Int
+bulletID = 0
+
 data Block = Block
     { _blockPosition :: Position
     , _blockTexture  :: Picture
@@ -153,7 +157,7 @@ instance Eq Entity where
     (==) e1 e2 = e1 ^. entityID == e2 ^.entityID
 
 instance Show Entity where 
-    show e@(Entity body _ eData direction) 
+    show e@(Entity id body _ eData direction) 
         | isPlayer e = 
             show body ++ 
             "; State:" ++ show (_currentState eData) ++ 
@@ -166,7 +170,7 @@ instance Show Entity where
             "; Direction: " ++ show direction ++ "\n"
 
 makeBullet :: Float -> Position -> Direction -> Entity
-makeBullet bulletPower origin direction = Entity body texture (ProjectileData bulletPower) direction
+makeBullet bulletPower origin direction = Entity bulletID body texture (ProjectileData bulletPower) direction
     where
         velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
         body = Body origin velocity bulletWeight bulletCollisionBox False
