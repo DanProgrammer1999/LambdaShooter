@@ -15,11 +15,12 @@ sampleWorld background uniqueID name animationTable  playerColBox = World
 sampleMap = 
     [
         Block (0, -200) (sampleBlockTexture 800 100) 800 100,
-        Block (200, 30) (sampleBlockTexture 200 40) 200 40 
+        Block (200, 30) (sampleBlockTexture 200 40) 200 40,
+        Block (-400, -50) (sampleBlockTexture 60 200) 60 200
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
-sampleBlockTexture w h = color red $ rectangleSolid w h
+sampleBlockTexture w h = color blue $ rectangleSolid w h
 
 
 makePlayer :: ID -> Name -> [(PlayerState, Animation)] -> CollisionBox -> Entity

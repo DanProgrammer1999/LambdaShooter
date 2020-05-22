@@ -6,13 +6,19 @@ module CommonData where
 
 import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
+<<<<<<< HEAD
 import Control.Lens hiding ((.=))
+=======
+import Graphics.Gloss
+import Control.Lens
+>>>>>>> origin
 import Data.Maybe
 import GHC.Generics
 import Data.Aeson
 
 import Constants
 import Animation
+import Constants
 
 data Weapon
     = ShootingWeapon
@@ -112,7 +118,7 @@ data KeyboardInfo = KeyboardInfo
     { _rightKeyPressed   :: Bool
     , _leftKeyPressed    :: Bool
     , _jumpKeyPressed    :: Bool
-    , _fireButtonPressed :: Bool
+    , _fireKeyPressed    :: Bool
     }
 
 keyboardInfo :: KeyboardInfo
@@ -121,9 +127,11 @@ makeLenses ''KeyboardInfo
 
 data World = World
     { _worldMap     :: Map
-    , _entities     :: [Entity]
+    , _projectiles  :: [Entity]
+    , _players      :: [Entity]
     , _myPlayer     :: Entity
     , _keyboardData :: KeyboardInfo
+    , _shootingCooldown :: Float
     }
 makeLenses ''World
 
@@ -150,13 +158,27 @@ instance Eq Entity where
     (==) e1 e2 = e1 ^. entityID == e2 ^.entityID
 
 instance Show Entity where 
-    show e@(Entity id body _ eData direction) = 
-        show body ++ 
-        "; State:" ++ show (_currentState eData) ++ 
-        "; Direction: " ++ show direction ++ 
-        "; AnimationInfo: " ++ show 
-            (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+    show e@(Entity body _ eData direction) 
+        | isPlayer e = 
+            show body ++ 
+            "; State:" ++ show (_currentState eData) ++ 
+            "; Health:" ++ show (fromMaybe 0 (eData ^? health)) ++
+            "; Direction: " ++ show direction ++ 
+            "; AnimationInfo: " ++ show 
+                (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+        | otherwise = 
+            show body ++
+            "; Direction: " ++ show direction ++ "\n"
 
+makeBullet :: Float -> Position -> Direction -> Entity
+makeBullet bulletPower origin direction = Entity body texture (ProjectileData bulletPower) direction
+    where
+        velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
+        body = Body origin velocity bulletWeight bulletCollisionBox False
+        texture = color black $ circleSolid 5
+
+bulletCollisionBox :: CollisionBox
+bulletCollisionBox = CircleBox 5
 
 isProjectile :: Entity -> Bool
 isProjectile entity

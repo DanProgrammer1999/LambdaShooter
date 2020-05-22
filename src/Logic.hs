@@ -19,6 +19,8 @@ handleInput (EventKey (Char c) state _ _) world
     = world & keyboardData %~ keyAction (toLower c) (state == Down)
 handleInput (EventKey (SpecialKey KeySpace) state _ _) world
     = world & keyboardData %~ keyAction ' ' (state == Down)
+handleInput (EventKey (MouseButton LeftButton) state _ _) world
+    = world & keyboardData . fireKeyPressed .~ (state == Down)
 handleInput _ world = world
 
 keyAction :: Char -> Bool -> KeyboardInfo -> KeyboardInfo
@@ -27,47 +29,68 @@ keyAction 'd' isDown info = info & rightKeyPressed .~ isDown
 keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
--- | First, update my player according to buttons pressed 
--- | Second, update entities acceleration, velocity, and position; calculate gravity
--- | Third, check for collision
--- | Fourth, if there was collision, restore old position and clear acceleration and velocity
--- | Finally, if the collision was with projectile, subtract the value from the player's health
 updateWorld :: Float -> World -> World
-updateWorld = updateMyPlayer 
+updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectiles
+    where
+        withNewPlayer = updateMyPlayer timePassed world
 
+        oldProjectiles = withNewPlayer ^. projectiles
+        updateProjectile = over entityBody $ updateBody timePassed world
+        updatedProjectiles = updateProjectile <$> oldProjectiles
+
+        -- delete projectiles with collision or out of world
+        projectileFilter projectile 
+            =  not (projectile ^. entityBody . collisionHappened)
+            && not (isOutOfBounds (projectile ^. entityBody))
+        filteredProjectiles = filter projectileFilter updatedProjectiles
 
 updateMyPlayer :: Float -> World -> World
-updateMyPlayer timePassed world = world & myPlayer .~ newPlayer
+updateMyPlayer timePassed world = world &~
+    do
+        myPlayer .= newPlayer
+        myPlayer . entityData . animations .= newAnimations
+        myPlayer . entityData . currentState .= newState
+        myPlayer . direction %= getNewDirection keyboard
+
+        projectiles %=
+            (\oldProjectiles ->
+                if willShoot then createBullet newPlayer : oldProjectiles else oldProjectiles
+            )
+        shootingCooldown %=
+            (\cooldown -> if willShoot then maxShootingCooldown else max 0 (cooldown - timePassed))
     where
+        keyboard = world ^. keyboardData
         oldPlayer = world ^. myPlayer
 
-        (deltaVelocity, newDirection) = applyButtonsPress (world ^. keyboardData) oldPlayer
-        deltaVelocity' = mulSV timePassed deltaVelocity
-
         oldVelocity = oldPlayer ^. entityBody . bodyVelocity
-        newVelocity = oldVelocity &~ do
-            _1 .= fst deltaVelocity'
-            _2 += snd deltaVelocity'
+        deltaVelocity = mulSV timePassed $ getNewVelocity keyboard oldPlayer
+        newVelocity = deltaVelocity & _2 +~ snd oldVelocity
 
-        newPlayer = updateEntity timePassed (world ^. worldMap) withVelocity
+        newPlayer = oldPlayer &~ do
+            entityBody . bodyVelocity .= newVelocity
+            entityBody %= updateBody timePassed world
+
+        willShoot = canShoot && requestedShoot
             where
-                withDirection = oldPlayer & direction .~ newDirection
-                withVelocity = withDirection & entityBody . bodyVelocity .~ newVelocity
+                requestedShoot = world ^. keyboardData . fireKeyPressed
+                canShoot = world ^. shootingCooldown == 0
+        
+        oldState = fromMaybe EmptyState $ oldPlayer ^? entityData . currentState
+        newState = if willShoot then Shooting else getNewState newPlayer
+        newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
 
-
-updateEntity :: Float -> Map -> Entity -> Entity
-updateEntity timePassed map entity =
-    entity &~ do
-        entityBody %= updateBody timePassed map
-        entityData . animations .= newAnimationTable
-        entityData . currentState .= newState
+createBullet :: Entity -> Entity
+createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
     where
-        oldState = fromMaybe Idle $ entity ^? entityData . currentState
-        newState = getNewState entity
-        newAnimationTable =
-            if isPlayer entity
-            then getNewAnimation timePassed entity (newState /= oldState)
-            else []
+        (x, y) = player ^. entityBody . bodyPosition
+        (RectangleBox w _) = player ^. entityBody . bodyCollisionBox
+        directionMultiplier =
+            case player ^. direction of
+                LeftDirection -> -1
+                RightDirection -> 1
+
+        xOffset = directionMultiplier*w/2 + bulletOffset
+        bulletPosition = (x + xOffset, y)
 
 getNewState :: Entity -> PlayerState
 getNewState entity
@@ -80,18 +103,25 @@ getNewState entity
         velocity = entity ^. entityBody . bodyVelocity
         currState = entity ^? entityData . currentState
 
+getNewDirection :: KeyboardInfo -> Direction -> Direction
+getNewDirection (KeyboardInfo rightKey leftKey _ _) currDirection
+    = case (leftKey, rightKey) of
+        (True, False) -> LeftDirection
+        (False, True) -> RightDirection
+        _             -> currDirection
+
 -- | Should only be used on my player 
-applyButtonsPress :: KeyboardInfo -> Entity -> (Velocity, Direction)
-applyButtonsPress (KeyboardInfo rightKey leftKey jumpKey _) entity
-    = ((xVelocity, yVelocity), newDirection)
+getNewVelocity :: KeyboardInfo -> Entity -> Velocity
+getNewVelocity (KeyboardInfo rightKey leftKey jumpKey _) entity
+    = (xVelocity, yVelocity)
     where
-        velocityLens = entityBody . bodyVelocity
-        (xVelocity, newDirection) =
+        -- velocityLens = entityBody . bodyVelocity
+        xVelocity =
             case (leftKey, rightKey) of
-                (True, True)   -> (0, entity ^. direction)
-                (False, False) -> (0, entity ^. direction)
-                (True, False)  -> (entity ^. velocityLens . _1 - accelerationRate, LeftDirection)
-                (False, True)  -> (entity ^. velocityLens . _1 + accelerationRate, RightDirection)
+                (True, False)  -> -accelerationRate
+                (False, True)  -> accelerationRate
+                _              -> 0
+
         currState = entity ^? entityData . currentState
         jumpAllowed = currState == Just Idle || currState == Just Running
         -- jumpAllowed = True
