@@ -16,6 +16,8 @@ import Constants
 import System.Directory
 import Logic
 import Rendering
+import Server (serverMain)
+import Client (clientMain)
 
 
 simulationRate :: Int
