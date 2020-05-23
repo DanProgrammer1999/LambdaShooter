@@ -82,9 +82,10 @@ updateMyPlayer timePassed world = world &~
         newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
 
 createBullet :: Entity -> Entity
-createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. direction)
+createBullet player = makeBullet bulletPower bulletPosition (player ^. direction)
     where
         (x, y) = player ^. entityBody . bodyPosition
+        playerLevel = player ^? entityData . statistics . level & fromMaybe 0
         (RectangleBox w _) = player ^. entityBody . bodyCollisionBox
         directionMultiplier =
             case player ^. direction of
@@ -93,6 +94,7 @@ createBullet player = makeBullet defaultBulletPower bulletPosition (player ^. di
 
         xOffset = directionMultiplier*w/2 + bulletOffset
         bulletPosition = (x + xOffset, y)
+        bulletPower = baseBulletPower*(1 + (fromIntegral playerLevel)*0.1)
 
 getNewState :: Entity -> PlayerState
 getNewState entity
@@ -158,7 +160,7 @@ getNewAnimation timePassed player wasStateChange = newPlayerTable
         oldPlayerAnimation = fromMaybe getDefaultAnimation $ getAnimationFromEntity player
         newPlayerAnimation = newAnimation where
             anim = updateAnimation timePassed oldPlayerAnimation
-            newAnimation = if wasStateChange then anim {_curFrame = 0} else anim
+            newAnimation = if wasStateChange then anim & curFrame .~ 0 else anim
         -- | Calculate new Animation Table
         oldPlayerTable = player ^. entityData . animations
         newPlayerTable = (curState, newPlayerAnimation)
