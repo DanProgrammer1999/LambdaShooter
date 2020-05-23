@@ -80,6 +80,22 @@ dynamicImageToPicture = fromImageRGBA8.convertRGBA8
 scaleAnimation :: Float  -> Animation -> Animation
 scaleAnimation scaleFactor anima = anima & frames %~ map (scale scaleFactor scaleFactor)
 
+------------- Load Assets(Pictures\Animations) -------------
+loadGameGraphics :: IO GameGraphics
+loadGameGraphics = do
+    putStrLn "Loading graphics."
+    playerAnimations <- loadPlayerAnimations
+    bg               <- loadBackgroundPicture
+    bullet           <- loadBulletPicture
+    block            <- loadBlockPicture 
+    let gameGraphics = GameGraphics {
+        _playerAnimations  = playerAnimations,
+        _backgroundPicture = bg,
+        _bulletPicture     = bullet,
+        _blockPicture      = block
+        }
+    return gameGraphics
+
 loadPlayerAnimations :: IO PlayerAnimationTable
 loadPlayerAnimations = do
     putStrLn "Loading player animations..."
@@ -92,6 +108,17 @@ loadPlayerAnimations = do
     return animationTable where
         f (s, path, isOnce) =  (s, loadAnimation path isOnce)
 
+loadBackgroundPicture :: IO Picture
+loadBackgroundPicture = return Blank
+ 
+loadBulletPicture :: IO Picture
+loadBulletPicture = return $ color black $ circleSolid 5
+
+loadBlockPicture :: IO Picture
+loadBlockPicture = return $ color red $ rectangleSolid 20 100
+--------------------------------------------------------------------
+
+
 allPlayerAnimationsInfo :: [(PlayerState, FilePath, Bool)]
 allPlayerAnimationsInfo = [
     (Idle,     penguinIdlePath,     False),
@@ -102,7 +129,7 @@ allPlayerAnimationsInfo = [
     (Shooting, penguinShootingPath, True)
     ]
 
--- | makes default stab animation. Good to use with Maybe or Either
+-- | Makes default stab animation. Good to use with Maybe or Either
 getDefaultAnimation :: Animation
 getDefaultAnimation  = Animation 
     { _frameDelay = defaultFrameDelay
@@ -112,3 +139,10 @@ getDefaultAnimation  = Animation
     , _curFrame = 0
     , _isOnce = False
     }
+
+-- | Returns the right animation from the entitie's animation table
+getAnimationFromEntity :: GameGraphics -> EntityData -> Maybe Animation
+getAnimationFromEntity graphics (PlayerData _ _ _ state)  = animation where
+    animationTable = graphics ^. playerAnimations
+    animation = lookup state animationTable
+getAnimationFromEntity graphics _ = Nothing

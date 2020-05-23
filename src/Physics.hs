@@ -46,7 +46,7 @@ gravityAcceleration body = - fallAcceleration * body ^. weight
 detectEntitiesCollision :: [Entity] -> Body -> Bool
 detectEntitiesCollision entities body = or $ checkEntityCollision <$> entities
     where
-        checkEntityCollision (Entity _ entityBody' _ _ _) 
+        checkEntityCollision (Entity _ entityBody' _ _) 
             = detectCollision 
                 (body ^. bodyPosition) 
                 (entityBody' ^. bodyPosition) 
@@ -54,10 +54,10 @@ detectEntitiesCollision entities body = or $ checkEntityCollision <$> entities
                 (entityBody' ^. bodyCollisionBox)
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
-detectMapCollision (Map _ allBlocks) collisionBox position
+detectMapCollision (Map _ _ allBlocks) collisionBox position
     = or (checkBlockCollision <$> allBlocks)
     where 
-        checkBlockCollision (Block blockPosition _ w h) 
+        checkBlockCollision (Block blockPosition w h) 
             = detectCollision position blockPosition collisionBox (RectangleBox w h) 
         
 detectCollision :: Position -> Position -> CollisionBox -> CollisionBox -> Bool

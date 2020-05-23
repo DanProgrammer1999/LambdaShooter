@@ -13,7 +13,7 @@ defaultPort = 3579
 -- | how often to sent data (for both client & server)
 -- | 1000000 is 1 second.
 delaySending :: Int
-delaySending = 10000
+delaySending = 1000000
 
 ----- Physics -----
 
@@ -42,6 +42,12 @@ accelerationRate = 250
 jumpAcceleration :: Float
 jumpAcceleration = 1000
 
+defaultPosition :: (Float, Float)
+defaultPosition = (0,0)
+
+defaultHP :: Float
+defaultHP = 100
+
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
 stopVelocity = 1
@@ -51,6 +57,11 @@ maxHealth = 100
 
 playerSpawnPosition :: (Float, Float)
 playerSpawnPosition = (0, 100)
+
+-------- Logic --------
+
+killsToLevelUp :: [Int]
+killsToLevelUp = [1, 5, 10, 20, 35, 50, 75, 100]
 
 ----- Projectiles -----
 
@@ -63,8 +74,8 @@ bulletOffset = 10
 defaultBulletVelocity :: (Float, Float)
 defaultBulletVelocity = (50, 0)
 
-defaultBulletPower :: Float
-defaultBulletPower = 35
+baseBulletPower :: Float
+baseBulletPower = 15
 
 -- in seconds
 maxShootingCooldown :: Float 
@@ -75,6 +86,9 @@ maxShootingCooldown = 0.33
 worldBoundary :: Float
 worldBoundary = 10000
 
+blockTextureSize :: (Float, Float)
+blockTextureSize = (210, 68)
+
 ----- Rendering -----
 
 defaultFrameDelay :: Float
@@ -83,10 +97,31 @@ defaultFrameDelay = 0.02
 entitiesScale :: Float
 entitiesScale = 0.2
 
+playerPictureWidth :: Float
+playerPictureWidth = 420
+
+playerPictureHeight :: Float
+playerPictureHeight = 480
+
+nameYOffset :: Float
+nameYOffset = 170
+
+healthbarYOffset :: Float
+healthbarYOffset = 0
+
+healthBarLength :: Float 
+healthBarLength = playerPictureWidth + 40
+
+defaultWindowSize :: (Int, Int)
+defaultWindowSize = (1280, 720)
+
 -------------------------------
 
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
+
+blockTexturePath :: FilePath
+blockTexturePath = "resources/block.png"
 
 ----- Player sprites  -----
 

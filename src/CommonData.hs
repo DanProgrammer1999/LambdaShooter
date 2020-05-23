@@ -19,6 +19,7 @@ type Velocity = Point
 type Name     = String
 type ID       = Int
 type Health   = Float
+type Score    = Float
 
 data PlayerState 
     = Idle 
@@ -37,9 +38,8 @@ data Direction =  LeftDirection | RightDirection deriving (Generic, Eq, Show)
 instance ToJSON   Direction
 instance FromJSON Direction
 
--- | TODO TOFIX Alex: Keep only appropriate sprites in resources folder
--- so that animations look smooth and nice(cut bad frames).
--- | Note: we can swtich to array for O(1) index-based access.
+
+-- | Note: we can swich to array for O(1) index-based access.
 -- That would be useful since we always access frames by index.
 data Animation = Animation
   { _frameDelay    :: Float      -- ^ How long to wait between frames
@@ -58,6 +58,15 @@ instance Show Animation where
 
 type PlayerAnimationTable = [(PlayerState, Animation)]
 
+data GameGraphics
+    = GameGraphics 
+    { _playerAnimations   :: PlayerAnimationTable
+    , _backgroundPicture  :: Picture
+    , _bulletPicture      :: Picture
+    , _blockPicture       :: Picture
+    } 
+makeLenses ''GameGraphics
+
 data CollisionBox
     = RectangleBox
         { _width  :: Float
@@ -67,6 +76,7 @@ data CollisionBox
         {_radius :: Float } 
     deriving (Generic, Show)
 makeLenses ''CollisionBox
+
 instance ToJSON   CollisionBox
 instance FromJSON CollisionBox
 
@@ -83,8 +93,10 @@ instance ToJSON   Body
 instance FromJSON Body
 
 data PlayerStatistics = Statistics
-    { _deaths :: Integer
-    , _kills  :: Integer
+    { _deaths        :: Int
+    , _kills         :: Int
+    , _level         :: Int
+    , _lastDeathTime :: Int
     }
     deriving (Generic, Show)
 makeLenses ''PlayerStatistics
@@ -99,16 +111,13 @@ data EntityData
     , _currentState  :: PlayerState
     } 
     | ProjectileData
-    { _projectilePower :: Float } deriving (Generic, Show)
+    { _projectilePower :: Float
+    , _ownerID         :: ID
+     } deriving (Generic, Show)
 makeLenses ''EntityData
 
-data GameGraphics
-    = GameGraphics 
-    { _playerAnimations   :: PlayerAnimationTable
-    , _bulletPicture      :: Picture
-    , _backgroundPicture  :: Picture
-    , _blockPicture       :: Float -> Float -> Picture
-    } 
+instance ToJSON   EntityData
+instance FromJSON EntityData
 
 data Entity
     = Entity
@@ -116,30 +125,40 @@ data Entity
     , _entityBody    :: Body
     , _entityData    :: EntityData
     , _direction     :: Direction
-    } deriving Generic
+    } deriving (Generic, Show)
 makeLenses ''Entity
+
 
 data Block = Block
     { _blockPosition :: Position
     , _blockWidth    :: Float
     , _blockHeight   :: Float
-    }
+    } deriving (Generic, Show)
 makeLenses ''Block
+
+instance ToJSON   Block
+instance FromJSON Block
 
 data Map = Map
     { _maxWidth   :: Float
     , _maxHeight  :: Float
     , _blocks     :: [Block]
-    }
+    } deriving (Generic, Show)
 makeLenses ''Map
+
+instance ToJSON   Map
+instance FromJSON Map
 
 data KeyboardInfo = KeyboardInfo
     { _rightKeyPressed   :: Bool
     , _leftKeyPressed    :: Bool
     , _jumpKeyPressed    :: Bool
     , _fireKeyPressed    :: Bool
-    }
+    } deriving (Generic, Show)
 makeLenses ''KeyboardInfo
+
+instance ToJSON   KeyboardInfo
+instance FromJSON KeyboardInfo
 
 data World = World
     { _worldMap         :: Map
@@ -149,40 +168,28 @@ data World = World
     , _myPlayer         :: Entity
     , _keyboardData     :: KeyboardInfo
     , _shootingCooldown :: Float
-    }
+    } deriving (Generic, Show)
 makeLenses ''World
 
-data ClientInfo = ClientInfo
-    { _clientID         :: ID
-    , _clientName       :: Name
-    , _clientBody       :: Body
-    , _clientState      :: PlayerState
-    , _clientDirection  :: Direction
-    , _clientHealth     :: Health
-    , _clientStatistics :: PlayerStatistics
-    --, _clientWeapons   :: [Weapon]
-    } deriving (Generic, Show) 
-makeLenses ''ClientInfo
-
-instance ToJSON   ClientInfo
-instance FromJSON ClientInfo
-
-instance Eq ClientInfo where
-    (==) ci1 ci2 = ci1 ^. clientID == ci2 ^.clientID
 
 instance Eq Entity where
     (==) e1 e2 = e1 ^. entityID == e2 ^.entityID
 
-instance Show Entity where 
-    show e@(Entity id body eData direction) 
-        | isPlayer e = 
-            show body ++ 
-            "; State:" ++ show (_currentState eData) ++ 
-            "; Health:" ++ show (fromMaybe 0 (eData ^? health)) ++
-            "; Direction: " ++ show direction
-        | otherwise = 
-            show body ++
-            "; Direction: " ++ show direction ++ "\n"
+-- instance Show Entity where 
+--     show e@(Entity id body eData direction) 
+--         | isPlayer e = 
+--             show body ++ 
+--             "; State:" ++ show (_currentState eData) ++ 
+--             "; Health:" ++ show (fromMaybe 0 (eData ^? health)) ++
+--             "; Direction: " ++ show direction
+--         | otherwise = 
+--             show body ++
+--             "; Direction: " ++ show direction ++ "\n"
+instance ToJSON   Entity
+instance FromJSON Entity
+
+instance ToJSON   World
+instance FromJSON World
 
 isProjectile :: Entity -> Bool
 isProjectile entity
@@ -198,10 +205,4 @@ isPlayer entity
     where
         testLens = entityData . name
 
--- | Returns the right animation from the entitie's animation table
--- TODO FINISH IT
-getAnimationFromEntity :: Entity -> Maybe Animation
-getAnimationFromEntity entity = animation where
-    animationTable = entity ^. entityData . animations
-    state = fromMaybe EmptyState (entity ^? entityData . currentState)
-    animation = lookup state animationTable
+

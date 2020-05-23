@@ -13,9 +13,9 @@ import Constructors (getDefaultPicture)
 import Data.Maybe
 
 renderWorld :: GameGraphics -> World -> Picture
-renderWorld gameGraphics world
-    =  renderMap (world ^. worldMap)
-    <> renderEntities allEntities
+renderWorld graphics world
+    =  renderMap graphics (world ^. worldMap)
+    <> renderEntities graphics allEntities
     <> renderBodies (map _entityBody allEntities)
     <> renderUI (world ^. myPlayer . entityData)
     where
@@ -23,46 +23,55 @@ renderWorld gameGraphics world
 
 -- | In case we want to see collision (for DEBUG purposes only)
 -- | we need to draw them additionaly here 
-renderEntities :: [Entity] -> Picture
-renderEntities entities = mconcat pictures  where
+renderEntities :: GameGraphics -> [Entity] -> Picture
+renderEntities graphics entities = mconcat pictures  where
     pictures :: [Picture]
-    pictures = map entityToPicture entities
+    pictures = map (entityToPicture graphics) entities
 
-
+--   TODO make scale on load, not every frame.
 -- | Render all Entities. Also translates and flip accordingly. 
-entityToPicture :: Entity -> Picture
-entityToPicture entity = scaledAndTranslatedPic where
+entityToPicture :: GameGraphics -> Entity -> Picture
+entityToPicture graphics entity = scaledAndTranslatedPic where
     position = entity ^. entityBody . bodyPosition
-
-    rightPic =
-        if   isPlayer entity
-        then playerPic
-        else entity ^. entityTexture
-    scaledPic = scale entitiesScale entitiesScale rightPic
+    playerPic = getPlayerPicture graphics entity
+    
+    scaledPic = scale entitiesScale entitiesScale playerPic
     scaledAndTranslatedPic =
-         uncurry translate position scaledPic
+        uncurry translate position scaledPic
 
-    playerPic = getPlayerPicture entity
+    getRightPic :: Entity -> Picture
+    getRightPic entity 
+        | isPlayer entity     = getPlayerPicture graphics entity
+        | isProjectile entity = graphics ^. bulletPicture 
 
-getPlayerPicture :: Entity -> Picture
-getPlayerPicture player
-    = playerName <> uncurry translate textureShift playerPic
+
+getPlayerPicture :: GameGraphics -> Entity -> Picture
+getPlayerPicture graphics player
+    = healthBar <> namePicture <> uncurry translate textureShift playerPic
     where
         directionMultiplier =
             if player ^. direction == LeftDirection then -1 else 1
         textureShift = mulSV directionMultiplier (100, 0)
-
-        animation = fromMaybe getDefaultAnimation (getAnimationFromEntity player)
+        eData = player ^. entityData
+        animation = fromMaybe getDefaultAnimation (getAnimationFromEntity graphics eData)
         foundPic = case player ^. direction of
             RightDirection -> animation ^? frames . element (animation ^. curFrame)
             LeftDirection  -> animation ^? flippedFrames . element (animation ^. curFrame)
-        playerPic = fromMaybe getDefaultPicture foundPic
 
-        playerName = color red $ uncurry translate namePosition scaled
-            where
-                namePosition = (-75, 250)
-                scaled = scale 0.75 0.75 namePicture
-                namePicture = text (fromMaybe "" (player ^? entityData . name))
+        playerPic = fromMaybe getDefaultPicture foundPic
+        playerName = fromMaybe "" $ player ^? entityData . name
+        playerLevel = fromMaybe 0 $ player ^? entityData . statistics . level
+
+        namePicture
+            = text (playerName ++ " (" ++ show playerLevel ++ " lvl.)")
+            & color red 
+            & translate (-playerPictureWidth/2 - 100) (playerPictureHeight/2 + nameYOffset)
+            & scale 0.7 0.7
+        
+        playerHealth = fromMaybe 0 (player ^? entityData . health)
+        healthBar 
+            = renderHealthBar playerHealth
+            & translate 0 (playerPictureHeight/2 + healthbarYOffset)
 
 renderBodies ::  [Body] -> Picture
 renderBodies bodies = mconcat pictures where
@@ -74,25 +83,47 @@ bodyToPicture body = uncurry translate (body ^. bodyPosition) pic where
 
 renderCollisionBox :: CollisionBox -> Picture
 renderCollisionBox (RectangleBox w h) = color getBodyColor $ rectangleWire w h
-renderCollisionBox (CircleBox r) =  color getBodyColor $ circleSolid r
+renderCollisionBox (CircleBox r) =  color getBodyColor $ circle r
 
-renderMap :: Map -> Picture
-renderMap m = (m ^. background) <> mconcat blocksPics
+renderMap :: GameGraphics -> Map -> Picture
+renderMap graphics m = (graphics ^. backgroundPicture) <> mconcat blocksPics
     where
-        blocksPics = map renderBlock (m ^. blocks)
+        blocksPics = map (renderBlock graphics) (m ^. blocks)
 
-renderBlock :: Block -> Picture
-renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
+renderBlock :: GameGraphics -> Block -> Picture
+renderBlock graphics b = uncurry translate (b ^. blockPosition) (graphics ^. blockPicture)
 
-renderUI :: EntityData -> Picture
-renderUI playerData = translate 0 350 $ healthContainer <> remainingBar
+renderHealthBar :: Health -> Picture
+renderHealthBar playerHealth = healthContainer <> remainingBar
     where
-        healthBarLength = 800.0
         healthContainer = rectangleSolid healthBarLength 10
-        healthPercent = fromMaybe 0 (playerData ^? health) / maxHealth
+        healthPercent = playerHealth / maxHealth
 
         remainingLength = healthBarLength * healthPercent
         remainingBar
             = translate (-(healthBarLength - remainingLength)/2) 0
             $ color green
             $ rectangleSolid (healthBarLength*healthPercent) 10
+
+-- Statistics
+renderUI :: World -> Picture
+renderUI world = deathsText <> killsText
+    where
+        playerStats = myPlayer . entityData . statistics
+        playerKills = fromMaybe 0 $ world ^? playerStats . kills
+        playerDeaths = fromMaybe 0 $ world ^? playerStats . deaths
+
+        (width, height) = world ^. windowSize
+        (width', height') = (fromIntegral width, fromIntegral height)
+
+        killsText 
+            = text ("Killed: " ++ show playerKills) 
+            & color green
+            & scale 0.15 0.15
+            & translate (-50) (-height'/2 + 150)
+            
+        deathsText 
+            = text ("Died " ++ show playerDeaths ++ " times") 
+            & color red
+            & scale 0.15 0.15
+            & translate (-50) (-height'/2 + 120)

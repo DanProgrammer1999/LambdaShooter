@@ -8,14 +8,15 @@ import CommonData
 import Constants
 import Constructors (keyboardInfo, makePlayer)
 
-sampleWorld :: Picture  -> ID -> Name -> [(PlayerState, Animation)] -> CollisionBox-> World
-sampleWorld background uniqueID name animationTable playerColBox 
-    = World worldMap' [] [] player keyboardInfo maxShootingCooldown
+sampleWorld :: ID -> Name -> CollisionBox -> World
+sampleWorld uniqueID name playerColBox 
+    = World worldMap' [] [] [] player keyboardInfo maxShootingCooldown
     where
-        player = makePlayer uniqueID name animationTable
-        worldMap' = Map background sampleMap
+        player = makePlayer uniqueID name
+        worldMap' = Map 2000 2000 sampleBlocks
 
-sampleMap = 
+sampleBlocks :: [Block]
+sampleBlocks = 
     [
         Block (0, -200)    800 100,
         Block (200,  30)   200 40,
