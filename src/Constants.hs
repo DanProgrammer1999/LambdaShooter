@@ -17,8 +17,9 @@ delaySending = 10000
 ----- Physics -----
 simulationRate :: Int
 simulationRate = 60
+
 playerWeight :: Float
-playerWeight = 10
+playerWeight = 7.5
 
 accelerationRate :: Float
 accelerationRate = 250
@@ -79,23 +80,27 @@ backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
 
 ----- Player sprites  -----
+
+resourcePath :: FilePath 
+resourcePath = "resources/penguin/cut/"
+
 penguinIdlePath :: FilePath
-penguinIdlePath  = "resources/penguin/idle"
+penguinIdlePath  = resourcePath ++ "idle"
 
 penguinRunPath :: FilePath
-penguinRunPath   = "resources/penguin/run"
+penguinRunPath   = resourcePath ++ "run"
 
 penguinDeathPath :: FilePath
-penguinDeathPath = "resources/penguin/death"
+penguinDeathPath = resourcePath ++ "death"
 
 penguinJumpPath :: FilePath
-penguinJumpPath  = "resources/penguin/jump"
+penguinJumpPath  = resourcePath ++ "jump"
 
 penguinFallPath :: FilePath
-penguinFallPath  = "resources/penguin/fall"
+penguinFallPath  = resourcePath ++ "fall"
 
 penguinShootingPath :: FilePath
-penguinShootingPath = "resources/penguin/idle_shooting"
+penguinShootingPath = resourcePath ++ "idle_shooting"
 
 
 ----- Pictures  -----

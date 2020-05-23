@@ -26,5 +26,5 @@ sampleBlockTexture w h = color blue $ rectangleSolid w h
 makePlayer :: ID -> Name -> [(PlayerState, Animation)] -> CollisionBox -> Entity
 makePlayer uniqueID name animationTable  colBox =
      Entity uniqueID playerBody Blank playerData RightDirection where
-        playerData = PlayerData [] 0 100.0 0 name Idle animationTable 
-        playerBody = Body defaultPosition defaultVelocity 10.0 colBox False
+        playerData = PlayerData [] 0 100.0 name playerStatistics Idle animationTable 
+        playerBody = Body defaultPosition defaultVelocity playerWeight colBox False

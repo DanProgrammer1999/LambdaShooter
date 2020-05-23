@@ -76,6 +76,8 @@ data PlayerStatistics = Statistics
 makeLenses ''PlayerStatistics
 instance ToJSON   PlayerStatistics
 instance FromJSON PlayerStatistics
+playerStatistics :: PlayerStatistics
+playerStatistics = Statistics 0 0
 
 data EntityData
     = PlayerData

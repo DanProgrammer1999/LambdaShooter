@@ -8,7 +8,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Juicy
 import Codec.Picture
 import Codec.Picture.Extra
-import Control.Lens hiding ((.=))
+import Control.Lens 
 import System.Directory (getDirectoryContents)
 import Data.Aeson
 import GHC.Generics
