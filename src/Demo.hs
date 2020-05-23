@@ -27,9 +27,9 @@ sampleMap :: Picture -> [Block]
 sampleMap blockTexture = 
     [
         makeBlock blockTexture (0, -200)   800 100,
-        makeBlock blockTexture (200, 60)   200 30,
+        makeBlock blockTexture (200, 70)   200 30,
         makeBlock blockTexture (-300, -60) 40  150,
-        makeBlock blockTexture (0, -60)     200 30
+        makeBlock blockTexture (0, -50)     200 30
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
