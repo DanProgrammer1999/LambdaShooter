@@ -89,7 +89,7 @@ entitiesScale :: Float
 entitiesScale = 0.2
 
 playerPictureWidth :: Float
-playerPictureWidth = 240
+playerPictureWidth = 420
 
 playerPictureHeight :: Float
 playerPictureHeight = 480
@@ -102,6 +102,9 @@ healthbarYOffset = 0
 
 healthBarLength :: Float 
 healthBarLength = playerPictureWidth + 40
+
+defaultWindowSize :: (Int, Int)
+defaultWindowSize = (1280, 720)
 
 -------------------------------
 

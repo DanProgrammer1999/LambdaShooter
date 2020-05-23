@@ -143,6 +143,7 @@ data World = World
     , _myPlayer         :: Entity
     , _keyboardData     :: KeyboardInfo
     , _shootingCooldown :: Float
+    , _windowSize       :: (Int, Int)
     }
 makeLenses ''World
 

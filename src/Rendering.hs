@@ -17,7 +17,7 @@ renderWorld world
     =  renderMap (world ^. worldMap)
     <> renderEntities allEntities
     <> renderBodies (map _entityBody allEntities)
-    <> renderUI (world ^. myPlayer . entityData)
+    <> renderUI world 
     where
         allEntities = world ^. myPlayer : (world ^. players ++ world ^. projectiles)
 
@@ -58,12 +58,13 @@ getPlayerPicture player
             LeftDirection  -> animation ^? flippedFrames . element (animation ^. curFrame)
 
         playerPic = fromMaybe getDefaultPicture foundPic
-        playerName = fromMaybe "" (player ^? entityData . name)
+        playerName = fromMaybe "" $ player ^? entityData . name
+        playerLevel = fromMaybe 0 $ player ^? entityData . statistics . level
 
         namePicture
-            = text playerName
+            = text (playerName ++ " (" ++ show playerLevel ++ " lvl.)")
             & color red 
-            & translate (-playerPictureWidth/2) (playerPictureHeight/2 + nameYOffset)
+            & translate (-playerPictureWidth/2 - 100) (playerPictureHeight/2 + nameYOffset)
             & scale 0.7 0.7
         
         playerHealth = fromMaybe 0 (player ^? entityData . health)
@@ -104,5 +105,25 @@ renderHealthBar playerHealth = healthContainer <> remainingBar
             $ rectangleSolid (healthBarLength*healthPercent) 10
 
 -- Statistics
-renderUI :: EntityData -> Picture
-renderUI playerData = translate 0 350 Blank
+renderUI :: World -> Picture
+renderUI world = deathsText <> killsText
+    where
+        playerStats = myPlayer . entityData . statistics
+        playerKills = fromMaybe 0 $ world ^? playerStats . kills
+        playerDeaths = fromMaybe 0 $ world ^? playerStats . deaths
+
+        (width, height) = world ^. windowSize
+        (width', height') = (fromIntegral width, fromIntegral height)
+
+        killsText 
+            = text ("Killed: " ++ show playerKills) 
+            & color green
+            & scale 0.15 0.15
+            & translate (-50) (-height'/2 + 150)
+            -- & translate (-width' + 300) (-height'/2 + 300)
+            
+        deathsText 
+            = text ("Died " ++ show playerDeaths ++ " times") 
+            & color red
+            & scale 0.15 0.15
+            & translate (-50) (-height'/2 + 120)

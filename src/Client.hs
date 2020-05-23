@@ -17,6 +17,7 @@ import           Data.Maybe
 
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Game
+import           Graphics.Gloss.Interface.Environment
 import           Graphics.Gloss.Juicy
 
 import           Animation
@@ -81,7 +82,7 @@ clientMain name =
 runClient :: TVar [ClientInfo] -> TVar ClientInfo -> World -> PlayerAnimationTable -> IO ()
 runClient otherInfo ourInfo world table = do
     putStrLn "Client: Starting the game..."
-    playIO (InWindow "LambdaShooter" (1280, 720) (0, 0)) white simulationRate
+    playIO (InWindow "LambdaShooter" defaultWindowSize (0, 0)) white simulationRate
         world renderWorldIO handleInputIO (updateWorldIO otherInfo ourInfo table)
 
 renderWorldIO :: World -> IO Picture
@@ -95,13 +96,19 @@ updateWorldIO :: TVar [ClientInfo] -> TVar ClientInfo -> PlayerAnimationTable
 updateWorldIO otherInfo ourInfo playerAnimationTable timePassed world  = do
     -- | read the last information server has sent us
     clientsInfoIO <- readTVarIO otherInfo
+    newWindowSize <- getScreenSize
     -- | clientsInfo -> Entities
     let newEntities = map (entityFromClientInfo playerAnimationTable) clientsInfoIO :: [Entity]
     let playerID = world ^. myPlayer . entityID
     let newEntitiesWithoutMe = filter ((playerID /=) . view entityID) newEntities
-    let newWorld = updateWorld timePassed (world  & players .~ newEntitiesWithoutMe)
+    let newWorld 
+            = world 
+            & players .~ newEntitiesWithoutMe 
+            & windowSize .~ newWindowSize
+    let updatedWorld = updateWorld timePassed newWorld
+    
     -- | Modify variable which is used to notify server about our player movements
-    atomically $ writeTVar ourInfo (clientInfoFromEntity $ newWorld ^. myPlayer)
+    atomically $ writeTVar ourInfo (clientInfoFromEntity $ updatedWorld ^. myPlayer)
     -- | update new world with entites from the server.
-    return newWorld
+    return updatedWorld
     
