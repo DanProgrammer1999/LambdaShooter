@@ -80,6 +80,9 @@ maxShootingCooldown = 0.33
 worldBoundary :: Float
 worldBoundary = 10000
 
+blockTextureSize :: (Float, Float)
+blockTextureSize = (210, 68)
+
 ----- Rendering -----
 
 defaultFrameDelay :: Float
@@ -110,6 +113,9 @@ defaultWindowSize = (1280, 720)
 
 backgroundPath :: FilePath
 backgroundPath = "resources/background.png"
+
+blockTexturePath :: FilePath
+blockTexturePath = "resources/block.png"
 
 ----- Player sprites  -----
 

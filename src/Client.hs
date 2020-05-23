@@ -41,8 +41,10 @@ app name conn  = do
     print $ show uniqueID ++ " <--  that is uniqueID i received from the server."
     -- | Creates world
     playerAnimationTable <- loadPlayerAnimations
-    let world = sampleWorld blank uniqueID name playerAnimationTable (RectangleBox 40 80)
-    let player = _myPlayer world
+    backgroundPic <- loadPicture backgroundPath
+    blockTexture <- loadPicture blockTexturePath
+    let world = sampleWorld backgroundPic blockTexture uniqueID name playerAnimationTable
+    let player = world ^. myPlayer
     -- | send our Info
     WS.sendTextData conn (encode $ clientInfoFromEntity player)
     -- | creates Shared Transactional Memory(STM) we can communicate over

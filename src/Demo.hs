@@ -8,23 +8,28 @@ import CommonData
 import Constants
 import Constructors (keyboardInfo, makePlayer)
 
-sampleWorld :: Picture  -> ID -> Name -> [(PlayerState, Animation)] -> CollisionBox-> World
-sampleWorld background uniqueID name animationTable playerColBox 
+sampleWorld :: Picture -> Picture  -> ID -> Name -> [(PlayerState, Animation)] -> World
+sampleWorld background blockTexture uniqueID name animationTable 
     = World worldMap' [] [] player keyboardInfo maxShootingCooldown defaultWindowSize
     where
         player = makePlayer uniqueID name animationTable
-        worldMap' = Map background sampleMap
+        worldMap' = Map background (sampleMap blockTexture)
 
-makeBlock :: Position -> Float -> Float -> Block
-makeBlock position width height 
-    = Block position (sampleBlockTexture width height) width height
+makeBlock :: Picture -> Position -> Float -> Float -> Block
+makeBlock blockTexture position width height
+    = Block position (scale xScale yScale blockTexture) width height
+    where 
+        (textureWidth, textureHeight) = blockTextureSize
+        xScale = width / textureWidth
+        yScale = height / textureHeight 
 
-sampleMap = 
+sampleMap :: Picture -> [Block]
+sampleMap blockTexture = 
     [
-        makeBlock (0, -200)   800 100,
-        makeBlock (200, 60)   200 30,
-        makeBlock (-300, -60) 40  150,
-        makeBlock (0, -60)     200 30
+        makeBlock blockTexture (0, -200)   800 100,
+        makeBlock blockTexture (200, 60)   200 30,
+        makeBlock blockTexture (-300, -60) 40  150,
+        makeBlock blockTexture (0, -60)     200 30
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
