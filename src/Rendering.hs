@@ -16,7 +16,7 @@ renderWorld :: World -> Picture
 renderWorld world
     =  renderMap (world ^. worldMap)
     <> renderEntities allEntities
-    <> renderBodies (map _entityBody allEntities)
+    <> renderBodies (map (view entityBody) allEntities)
     <> renderUI world 
     where
         allEntities = world ^. myPlayer : (world ^. players ++ world ^. projectiles)
@@ -82,7 +82,7 @@ bodyToPicture body = uncurry translate (body ^. bodyPosition) pic where
 
 renderCollisionBox :: CollisionBox -> Picture
 renderCollisionBox (RectangleBox w h) = color getBodyColor $ rectangleWire w h
-renderCollisionBox (CircleBox r) =  color getBodyColor $ circleSolid r
+renderCollisionBox (CircleBox r) =  color getBodyColor $ circle r
 
 renderMap :: Map -> Picture
 renderMap m = (m ^. background) <> mconcat blocksPics
@@ -120,7 +120,6 @@ renderUI world = deathsText <> killsText
             & color green
             & scale 0.15 0.15
             & translate (-50) (-height'/2 + 150)
-            -- & translate (-width' + 300) (-height'/2 + 300)
             
         deathsText 
             = text ("Died " ++ show playerDeaths ++ " times") 

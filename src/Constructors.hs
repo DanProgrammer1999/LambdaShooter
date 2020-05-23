@@ -24,7 +24,7 @@ makeBullet bulletPower origin direction = Entity bulletID body texture (Projecti
     where
         velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
         body = Body origin velocity bulletWeight bulletCollisionBox False
-        texture = color black $ circleSolid 5
+        texture = color black $ circleSolid 20
 
 bulletCollisionBox :: CollisionBox
 bulletCollisionBox = CircleBox 5
