@@ -6,7 +6,7 @@ module CommonData where
 
 import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Data.Picture
-import Control.Lens hiding ((.=))
+import Control.Lens
 import Graphics.Gloss
 import Data.Maybe
 import GHC.Generics
@@ -65,17 +65,25 @@ data Body = Body
     , _collisionHappened :: Bool
     } deriving (Generic, Show)
 makeLenses ''Body
-
 instance ToJSON   Body
 instance FromJSON Body
+
+data PlayerStatistics = Statistics
+    { _deaths :: Integer
+    , _kills  :: Integer
+    }
+    deriving (Generic, Show)
+makeLenses ''PlayerStatistics
+instance ToJSON   PlayerStatistics
+instance FromJSON PlayerStatistics
 
 data EntityData
     = PlayerData
     { _weapons       :: [Weapon]
     , _choosenWeapon :: ChoosenWeapon
     , _health        :: Health
-    , _score         :: Score
     , _name          :: Name
+    , _statistics    :: PlayerStatistics
     , _currentState  :: PlayerState
     , _animations    :: PlayerAnimationTable
     } 
@@ -125,23 +133,23 @@ keyboardInfo = KeyboardInfo False False False False
 makeLenses ''KeyboardInfo
 
 data World = World
-    { _worldMap     :: Map
-    , _projectiles  :: [Entity]
-    , _players      :: [Entity]
-    , _myPlayer     :: Entity
-    , _keyboardData :: KeyboardInfo
+    { _worldMap         :: Map
+    , _projectiles      :: [Entity]
+    , _players          :: [Entity]
+    , _myPlayer         :: Entity
+    , _keyboardData     :: KeyboardInfo
     , _shootingCooldown :: Float
     }
 makeLenses ''World
 
 data ClientInfo = ClientInfo
-    { _clientID        :: ID
-    , _clientName      :: Name
-    , _clientBody      :: Body
-    , _clientState     :: PlayerState
-    , _clientDirection :: Direction
-    , _clientHealth    :: Health
-    , _clientScore     :: Score
+    { _clientID         :: ID
+    , _clientName       :: Name
+    , _clientBody       :: Body
+    , _clientState      :: PlayerState
+    , _clientDirection  :: Direction
+    , _clientHealth     :: Health
+    , _clientStatistics :: PlayerStatistics
     --, _clientWeapons   :: [Weapon]
     , _clientChoosenWeapon :: ChoosenWeapon
     } deriving (Generic, Show) 
@@ -201,17 +209,17 @@ getAnimationFromEntity entity = animation where
     animation = lookup state animationTable
 
 clientInfoFromEntity :: Entity -> ClientInfo
-clientInfoFromEntity e = ClientInfo {
-    _clientID           = e ^. entityID, 
-    _clientName         = e ^. entityData . name,
-    _clientBody         = e ^. entityBody,
-    _clientState        = _currentState $ e ^. entityData,
-    _clientDirection    = e ^. direction,
-    _clientHealth       = _health $ e ^. entityData,
-    _clientScore        = _score  $ e ^. entityData,
+clientInfoFromEntity e = ClientInfo 
+    { _clientID            = e ^. entityID
+    , _clientName          = e ^. entityData . name
+    , _clientBody          = e ^. entityBody
+    , _clientState         = fromMaybe EmptyState $ e ^? entityData . currentState
+    , _clientDirection     = e ^. direction
+    , _clientHealth        = _health $ e ^. entityData
+    , _clientStatistics    = fromMaybe (Statistics 0 0) $ e ^? entityData . statistics
     --_clientWeapons      = e ^. entityData . weapons,
-    _clientChoosenWeapon= _choosenWeapon $ e ^. entityData
-}
+    , _clientChoosenWeapon = fromMaybe 0 $ e ^? entityData . choosenWeapon
+    }
 
 entityFromClientInfo :: PlayerAnimationTable -> ClientInfo -> Entity
 entityFromClientInfo table info = Entity id body Blank edata direction where
@@ -219,7 +227,7 @@ entityFromClientInfo table info = Entity id body Blank edata direction where
       _weapons       = [] -- TODO TOFIX problem with toJSON, fromJSON for Picture.
     , _choosenWeapon = info ^. clientChoosenWeapon
     , _health        = info ^. clientHealth
-    , _score         = info ^. clientScore
+    , _statistics    = info ^. clientStatistics
     , _name          = info ^. clientName
     , _currentState  = info ^. clientState
     , _animations    = table
