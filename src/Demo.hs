@@ -15,11 +15,16 @@ sampleWorld background uniqueID name animationTable playerColBox
         player = makePlayer uniqueID name animationTable
         worldMap' = Map background sampleMap
 
+makeBlock :: Position -> Float -> Float -> Block
+makeBlock position width height 
+    = Block position (sampleBlockTexture width height) width height
+
 sampleMap = 
     [
-        Block (0, -200) (sampleBlockTexture 800 100) 800 100,
-        Block (200, 30) (sampleBlockTexture 200 40) 200 40,
-        Block (-400, -50) (sampleBlockTexture 60 200) 60 200
+        makeBlock (0, -200)   800 100,
+        makeBlock (200, 60)   200 30,
+        makeBlock (-300, -60) 40  150,
+        makeBlock (0, -60)     200 30
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture
