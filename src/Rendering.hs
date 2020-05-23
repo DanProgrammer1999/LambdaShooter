@@ -46,7 +46,7 @@ entityToPicture entity = scaledAndTranslatedPic where
 
 getPlayerPicture :: Entity -> Picture
 getPlayerPicture player
-    = playerName <> uncurry translate textureShift playerPic
+    = healthBar <> namePicture <> uncurry translate textureShift playerPic
     where
         directionMultiplier =
             if player ^. direction == LeftDirection then -1 else 1
@@ -56,13 +56,20 @@ getPlayerPicture player
         foundPic = case player ^. direction of
             RightDirection -> animation ^? frames . element (animation ^. curFrame)
             LeftDirection  -> animation ^? flippedFrames . element (animation ^. curFrame)
-        playerPic = fromMaybe getDefaultPicture foundPic
 
-        playerName = color red $ uncurry translate namePosition scaled
-            where
-                namePosition = (-75, 250)
-                scaled = scale 0.75 0.75 namePicture
-                namePicture = text (fromMaybe "" (player ^? entityData . name))
+        playerPic = fromMaybe getDefaultPicture foundPic
+        playerName = fromMaybe "" (player ^? entityData . name)
+
+        namePicture
+            = text playerName
+            & color red 
+            & translate (-playerPictureWidth/2) (playerPictureHeight/2 + nameYOffset)
+            & scale 0.7 0.7
+        
+        playerHealth = fromMaybe 0 (player ^? entityData . health)
+        healthBar 
+            = renderHealthBar playerHealth
+            & translate 0 (playerPictureHeight/2 + healthbarYOffset)
 
 renderBodies ::  [Body] -> Picture
 renderBodies bodies = mconcat pictures where
@@ -84,15 +91,18 @@ renderMap m = (m ^. background) <> mconcat blocksPics
 renderBlock :: Block -> Picture
 renderBlock b = uncurry translate (b ^. blockPosition) (b ^. blockTexture)
 
-renderUI :: EntityData -> Picture
-renderUI playerData = translate 0 350 $ healthContainer <> remainingBar
+renderHealthBar :: Health -> Picture
+renderHealthBar playerHealth = healthContainer <> remainingBar
     where
-        healthBarLength = 800.0
         healthContainer = rectangleSolid healthBarLength 10
-        healthPercent = fromMaybe 0 (playerData ^? health) / maxHealth
+        healthPercent = playerHealth / maxHealth
 
         remainingLength = healthBarLength * healthPercent
         remainingBar
             = translate (-(healthBarLength - remainingLength)/2) 0
             $ color green
             $ rectangleSolid (healthBarLength*healthPercent) 10
+
+-- Statistics
+renderUI :: EntityData -> Picture
+renderUI playerData = translate 0 350 Blank

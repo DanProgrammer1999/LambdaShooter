@@ -83,6 +83,21 @@ defaultFrameDelay = 0.02
 entitiesScale :: Float
 entitiesScale = 0.2
 
+playerPictureWidth :: Float
+playerPictureWidth = 240
+
+playerPictureHeight :: Float
+playerPictureHeight = 480
+
+nameYOffset :: Float
+nameYOffset = 170
+
+healthbarYOffset :: Float
+healthbarYOffset = 0
+
+healthBarLength :: Float 
+healthBarLength = playerPictureWidth + 40
+
 -------------------------------
 
 backgroundPath :: FilePath
