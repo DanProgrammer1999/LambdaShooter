@@ -1,15 +1,17 @@
 module Logic (handleInput, updateWorld) where
 
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss.Data.Vector
 import Control.Lens
 import Data.Maybe
 import Data.Either
 import Data.Char
 
+import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Data.Vector
+
 import CommonData
 import Constants
+import Constructors (makeBullet)
 import Animation
 import Physics
 
@@ -115,7 +117,6 @@ getNewVelocity :: KeyboardInfo -> Entity -> Velocity
 getNewVelocity (KeyboardInfo rightKey leftKey jumpKey _) entity
     = (xVelocity, yVelocity)
     where
-        -- velocityLens = entityBody . bodyVelocity
         xVelocity =
             case (leftKey, rightKey) of
                 (True, False)  -> -accelerationRate

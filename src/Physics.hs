@@ -54,7 +54,7 @@ detectEntitiesCollision entities body = or $ checkEntityCollision <$> entities
                 (entityBody' ^. bodyCollisionBox)
 
 detectMapCollision :: Map -> CollisionBox -> Position -> Bool
-detectMapCollision (Map _ maxW maxH allBlocks) collisionBox position
+detectMapCollision (Map _ allBlocks) collisionBox position
     = or (checkBlockCollision <$> allBlocks)
     where 
         checkBlockCollision (Block blockPosition _ w h) 

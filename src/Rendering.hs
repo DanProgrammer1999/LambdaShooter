@@ -1,13 +1,15 @@
 module Rendering (renderWorld) where
 
+import Control.Lens
+import Prelude hiding (flip)
+
 import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
-import Control.Lens
 
 import CommonData
 import Animation
 import Constants
-import Prelude hiding (flip)
+import Constructors (getDefaultPicture)
 import Data.Maybe
 
 renderWorld :: World -> Picture

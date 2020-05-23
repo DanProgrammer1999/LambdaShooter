@@ -12,34 +12,51 @@ import Data.Maybe
 import GHC.Generics
 import Data.Aeson
 
-import Animation
 import Constants
-
-data Weapon
-    = ShootingWeapon
-        { _shootingWeaponTexture :: Picture
-        , _shootingPower         :: Float
-        }
-    | ColdWeapon
-        { _coldWeaponTexture :: Picture
-        , _cutPower          :: Float
-        , _cutRadius         :: Float
-        }
-    | WaveWeapon
-        { _waveWeaponTexture :: Picture
-        , _wavePower         :: Float
-        , _waveHitRadius     :: Float
-        }
-    deriving (Show)
-makeLenses ''Weapon
 
 type Position = Point
 type Velocity = Point
 type Name     = String
 type ID       = Int
 type Health   = Float
-type Score    = Float
-type ChoosenWeapon = Int
+
+data PlayerState 
+    = Idle 
+    | Running 
+    | Jumping 
+    | Falling 
+    | Dying 
+    | Shooting 
+    | EmptyState 
+    deriving (Generic, Eq, Show) 
+
+instance ToJSON   PlayerState
+instance FromJSON PlayerState
+
+data Direction =  LeftDirection | RightDirection deriving (Generic, Eq, Show)
+instance ToJSON   Direction
+instance FromJSON Direction
+
+-- | TODO TOFIX Alex: Keep only appropriate sprites in resources folder
+-- so that animations look smooth and nice(cut bad frames).
+-- | Note: we can swtich to array for O(1) index-based access.
+-- That would be useful since we always access frames by index.
+data Animation = Animation
+  { _frameDelay    :: Float      -- ^ How long to wait between frames
+  , _frames        :: [Picture]  -- ^ All frames 
+  , _flippedFrames :: [Picture]  -- ^ Flipped frames (for Left Direction actions)
+  , _waitFor       :: Float      -- ^ Time until next frame
+  , _curFrame      :: Int        -- ^ Current number of frame
+  , _isOnce        :: Bool       -- ^ Should the animation by cyclic or played once?
+  }
+makeLenses ''Animation
+
+instance Show Animation where
+  show (Animation _ frames _ _ curFrame _) =
+    " frames length: " ++ show (length frames) ++
+    "; CurFrame: " ++ show curFrame
+
+type PlayerAnimationTable = [(PlayerState, Animation)]
 
 data CollisionBox
     = RectangleBox
@@ -50,10 +67,6 @@ data CollisionBox
         {_radius :: Float } 
     deriving (Generic, Show)
 makeLenses ''CollisionBox
-
-defaultPlayerCollisionBox :: CollisionBox
-defaultPlayerCollisionBox = RectangleBox 50 50
-
 instance ToJSON   CollisionBox
 instance FromJSON CollisionBox
 
@@ -76,14 +89,10 @@ data PlayerStatistics = Statistics
 makeLenses ''PlayerStatistics
 instance ToJSON   PlayerStatistics
 instance FromJSON PlayerStatistics
-playerStatistics :: PlayerStatistics
-playerStatistics = Statistics 0 0
 
 data EntityData
     = PlayerData
-    { _weapons       :: [Weapon]
-    , _choosenWeapon :: ChoosenWeapon
-    , _health        :: Health
+    { _health        :: Health
     , _name          :: Name
     , _statistics    :: PlayerStatistics
     , _currentState  :: PlayerState
@@ -103,10 +112,6 @@ data Entity
     } deriving Generic
 makeLenses ''Entity
 
--- | Default id for bullets.
-bulletID :: Int
-bulletID = 0
-
 data Block = Block
     { _blockPosition :: Position
     , _blockTexture  :: Picture
@@ -117,8 +122,6 @@ makeLenses ''Block
 
 data Map = Map
     { _background :: Picture
-    , _maxWidth   :: Float
-    , _maxHeight  :: Float
     , _blocks     :: [Block]
     }
 makeLenses ''Map
@@ -129,9 +132,6 @@ data KeyboardInfo = KeyboardInfo
     , _jumpKeyPressed    :: Bool
     , _fireKeyPressed    :: Bool
     }
-
-keyboardInfo :: KeyboardInfo
-keyboardInfo = KeyboardInfo False False False False
 makeLenses ''KeyboardInfo
 
 data World = World
@@ -153,7 +153,6 @@ data ClientInfo = ClientInfo
     , _clientHealth     :: Health
     , _clientStatistics :: PlayerStatistics
     --, _clientWeapons   :: [Weapon]
-    , _clientChoosenWeapon :: ChoosenWeapon
     } deriving (Generic, Show) 
 makeLenses ''ClientInfo
 
@@ -172,22 +171,10 @@ instance Show Entity where
             show body ++ 
             "; State:" ++ show (_currentState eData) ++ 
             "; Health:" ++ show (fromMaybe 0 (eData ^? health)) ++
-            "; Direction: " ++ show direction ++ 
-            "; AnimationInfo: " ++ show 
-                (fromMaybe getDefaultAnimation (getAnimationFromEntity e))
+            "; Direction: " ++ show direction
         | otherwise = 
             show body ++
             "; Direction: " ++ show direction ++ "\n"
-
-makeBullet :: Float -> Position -> Direction -> Entity
-makeBullet bulletPower origin direction = Entity bulletID body texture (ProjectileData bulletPower) direction
-    where
-        velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
-        body = Body origin velocity bulletWeight bulletCollisionBox False
-        texture = color black $ circleSolid 5
-
-bulletCollisionBox :: CollisionBox
-bulletCollisionBox = CircleBox 5
 
 isProjectile :: Entity -> Bool
 isProjectile entity
@@ -207,33 +194,5 @@ isPlayer entity
 getAnimationFromEntity :: Entity -> Maybe Animation
 getAnimationFromEntity entity = animation where
     animationTable = entity ^. entityData . animations
-    state = fromMaybe Idle (entity ^? entityData . currentState)
+    state = fromMaybe EmptyState (entity ^? entityData . currentState)
     animation = lookup state animationTable
-
-clientInfoFromEntity :: Entity -> ClientInfo
-clientInfoFromEntity e = ClientInfo 
-    { _clientID            = e ^. entityID
-    , _clientName          = e ^. entityData . name
-    , _clientBody          = e ^. entityBody
-    , _clientState         = fromMaybe EmptyState $ e ^? entityData . currentState
-    , _clientDirection     = e ^. direction
-    , _clientHealth        = _health $ e ^. entityData
-    , _clientStatistics    = fromMaybe (Statistics 0 0) $ e ^? entityData . statistics
-    --_clientWeapons      = e ^. entityData . weapons,
-    , _clientChoosenWeapon = fromMaybe 0 $ e ^? entityData . choosenWeapon
-    }
-
-entityFromClientInfo :: PlayerAnimationTable -> ClientInfo -> Entity
-entityFromClientInfo table info = Entity id body Blank edata direction where
-    edata = PlayerData {
-      _weapons       = [] -- TODO TOFIX problem with toJSON, fromJSON for Picture.
-    , _choosenWeapon = info ^. clientChoosenWeapon
-    , _health        = info ^. clientHealth
-    , _statistics    = info ^. clientStatistics
-    , _name          = info ^. clientName
-    , _currentState  = info ^. clientState
-    , _animations    = table
-    } 
-    body      = info ^. clientBody
-    direction = info ^. clientDirection
-    id        = info ^. clientID     

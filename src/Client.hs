@@ -9,24 +9,25 @@ import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Network.WebSockets  as WS
 
-import Graphics.Gloss
-import Graphics.Gloss.Interface.IO.Game
-import Graphics.Gloss.Juicy
-import Control.Lens 
-import Control.Concurrent
-import Control.Concurrent.STM
-import Data.Aeson
-import Data.Maybe
+import           Control.Lens 
+import           Control.Concurrent
+import           Control.Concurrent.STM
+import           Data.Aeson
+import           Data.Maybe
 
-import Animation
-import Constants
-import CommonData
-import Logic
-import Rendering
-import Demo (sampleWorld)
+import           Graphics.Gloss
+import           Graphics.Gloss.Interface.IO.Game
+import           Graphics.Gloss.Juicy
+
+import           Animation
+import           Constants
+import           Constructors        (entityFromClientInfo, clientInfoFromEntity)
+import           CommonData
+import           Logic
+import           Rendering
+import           Demo                (sampleWorld)
 
 --  TODO: Make client download world from Server(not just load from Demo)
---  TODO: Make non hardcoded name for player (read from args)
 -- | Entry point when connection with server is established
 -- | and socket for communication is obtained
 app :: Name -> WS.ClientApp ()
@@ -67,7 +68,7 @@ app name conn  = do
         WS.sendTextData conn (encode myInfoCurrent)
 
     -- start playing
-    debug otherInfo myInfo world playerAnimationTable
+    runClient otherInfo myInfo world playerAnimationTable
 
     WS.sendClose conn ("Bye!" :: Text)
     putStrLn "Client: Disconnected"
@@ -77,19 +78,11 @@ clientMain :: Name -> IO ()
 clientMain name = 
     withSocketsDo $ WS.runClient defaultIP defaultPort "/" (app name)
 
--- | forget about release, use debug(it works nicely)
--- release :: IO ()
--- release = do
---     bgPic <- loadPicture backgroundPath
---     playerAnimationTable <- loadPlayerAnimations
---     let world = sampleWorld bgPic playerAnimationTable (RectangleBox 50 50)
---     play FullScreen white simulationRate world renderWorld handleInput updateWorld
-
-debug :: TVar [ClientInfo] -> TVar ClientInfo -> World -> PlayerAnimationTable -> IO ()
-debug otherInfo ourInfo world table= do
+runClient :: TVar [ClientInfo] -> TVar ClientInfo -> World -> PlayerAnimationTable -> IO ()
+runClient otherInfo ourInfo world table = do
     putStrLn "Client: Starting the game..."
     playIO (InWindow "LambdaShooter" (1280, 720) (0, 0)) white simulationRate
-     world renderWorldIO handleInputIO (updateWorldIO otherInfo ourInfo table)
+        world renderWorldIO handleInputIO (updateWorldIO otherInfo ourInfo table)
 
 renderWorldIO :: World -> IO Picture
 renderWorldIO = return . renderWorld
@@ -100,13 +93,13 @@ handleInputIO event world = return (handleInput event world)
 updateWorldIO :: TVar [ClientInfo] -> TVar ClientInfo -> PlayerAnimationTable
  -> Float -> World  -> IO World
 updateWorldIO otherInfo ourInfo playerAnimationTable timePassed world  = do
-    -- | read the last information server have sent us
+    -- | read the last information server has sent us
     clientsInfoIO <- readTVarIO otherInfo
     -- | clientsInfo -> Entities
     let newEntities = map (entityFromClientInfo playerAnimationTable) clientsInfoIO :: [Entity]
-    let playerID = _entityID $ world ^. myPlayer
-    let newEntitiesWithoutMe = filter ((playerID /=). _entityID) newEntities
-    let newWorld = updateWorld timePassed world {_players = newEntitiesWithoutMe}
+    let playerID = world ^. myPlayer . entityID
+    let newEntitiesWithoutMe = filter ((playerID /=) . view entityID) newEntities
+    let newWorld = updateWorld timePassed (world  & players .~ newEntitiesWithoutMe)
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo (clientInfoFromEntity $ newWorld ^. myPlayer)
     -- | update new world with entites from the server.

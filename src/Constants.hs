@@ -3,6 +3,7 @@ module Constants where
 import Graphics.Gloss
 
 ----- Networking ------
+
 defaultIP :: String
 defaultIP  = "127.0.0.1"
 
@@ -15,8 +16,22 @@ delaySending :: Int
 delaySending = 10000
 
 ----- Physics -----
+
 simulationRate :: Int
 simulationRate = 60
+
+fallAcceleration :: Float
+fallAcceleration = 5
+
+defaultVelocity :: (Float, Float)
+defaultVelocity = (0, 0)
+
+-- | Velocity multiplied by this on collision
+-- | Used to avoid too abrupt velocity cut on fall
+collisionVelocityRate :: Float
+collisionVelocityRate = 0.15
+
+----- Player -----
 
 playerWeight :: Float
 playerWeight = 7.5
@@ -27,31 +42,17 @@ accelerationRate = 250
 jumpAcceleration :: Float
 jumpAcceleration = 1000
 
-fallAcceleration :: Float
-fallAcceleration = 5
-
-defaultPosition :: (Float, Float)
-defaultPosition = (0, 100)
-
-defaultVelocity :: (Float, Float)
-defaultVelocity = (0, 0)
-
-maxHealth :: Float 
-maxHealth = 100
-
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
 stopVelocity = 1
 
--- | Velocity multiplied by this on collision
--- | Used to avoid too abrupt velocity cut on fall
-collisionVelocityRate :: Float
-collisionVelocityRate = 0.15
+maxHealth :: Float 
+maxHealth = 100
 
-entitiesScale :: Float
-entitiesScale = 0.2
+playerSpawnPosition :: (Float, Float)
+playerSpawnPosition = (0, 100)
 
--------------------------------
+----- Projectiles -----
 
 bulletWeight :: Float
 bulletWeight = 0.1
@@ -69,10 +70,18 @@ defaultBulletPower = 35
 maxShootingCooldown :: Float 
 maxShootingCooldown = 0.33
 
--------------------------------
+----- World -----
 
 worldBoundary :: Float
 worldBoundary = 10000
+
+----- Rendering -----
+
+defaultFrameDelay :: Float
+defaultFrameDelay = 0.02
+
+entitiesScale :: Float
+entitiesScale = 0.2
 
 -------------------------------
 
@@ -104,10 +113,6 @@ penguinShootingPath = resourcePath ++ "idle_shooting"
 
 
 ----- Pictures  -----
-getDefaultPicture :: Picture
-getDefaultPicture = color yellow $ rectangleSolid 100 100
 
 getBodyColor :: Color
 getBodyColor = blue
-
-
