@@ -77,6 +77,7 @@ data Body = Body
     , _bodyCollisionBox :: CollisionBox
     , _collisionHappened :: Bool
     } deriving (Generic, Show)
+
 makeLenses ''Body
 instance ToJSON   Body
 instance FromJSON Body
@@ -96,17 +97,23 @@ data EntityData
     , _name          :: Name
     , _statistics    :: PlayerStatistics
     , _currentState  :: PlayerState
-    , _animations    :: PlayerAnimationTable
     } 
     | ProjectileData
-    { _projectilePower :: Float }
+    { _projectilePower :: Float } deriving (Generic, Show)
 makeLenses ''EntityData
+
+data GameGraphics
+    = GameGraphics 
+    { _playerAnimations   :: PlayerAnimationTable
+    , _bulletPicture      :: Picture
+    , _backgroundPicture  :: Picture
+    , _blockPicture       :: Float -> Float -> Picture
+    } 
 
 data Entity
     = Entity
     { _entityID      :: ID
     , _entityBody    :: Body
-    , _entityTexture :: Picture -- ^ unused (Blank) for players.
     , _entityData    :: EntityData
     , _direction     :: Direction
     } deriving Generic
@@ -114,14 +121,14 @@ makeLenses ''Entity
 
 data Block = Block
     { _blockPosition :: Position
-    , _blockTexture  :: Picture
     , _blockWidth    :: Float
     , _blockHeight   :: Float
     }
 makeLenses ''Block
 
 data Map = Map
-    { _background :: Picture
+    { _maxWidth   :: Float
+    , _maxHeight  :: Float
     , _blocks     :: [Block]
     }
 makeLenses ''Map
@@ -137,6 +144,7 @@ makeLenses ''KeyboardInfo
 data World = World
     { _worldMap         :: Map
     , _projectiles      :: [Entity]
+    , _myProjectiles    :: [Entity]
     , _players          :: [Entity]
     , _myPlayer         :: Entity
     , _keyboardData     :: KeyboardInfo
@@ -166,7 +174,7 @@ instance Eq Entity where
     (==) e1 e2 = e1 ^. entityID == e2 ^.entityID
 
 instance Show Entity where 
-    show e@(Entity id body _ eData direction) 
+    show e@(Entity id body eData direction) 
         | isPlayer e = 
             show body ++ 
             "; State:" ++ show (_currentState eData) ++ 
@@ -191,6 +199,7 @@ isPlayer entity
         testLens = entityData . name
 
 -- | Returns the right animation from the entitie's animation table
+-- TODO FINISH IT
 getAnimationFromEntity :: Entity -> Maybe Animation
 getAnimationFromEntity entity = animation where
     animationTable = entity ^. entityData . animations

@@ -44,30 +44,6 @@ playerCollisionBox = RectangleBox 40 80
 playerStatistics :: PlayerStatistics
 playerStatistics = Statistics 0 0
 
-clientInfoFromEntity :: Entity -> ClientInfo
-clientInfoFromEntity e = ClientInfo 
-    { _clientID            = e ^. entityID
-    , _clientName          = e ^. entityData . name
-    , _clientBody          = e ^. entityBody
-    , _clientState         = fromMaybe EmptyState $ e ^? entityData . currentState
-    , _clientDirection     = e ^. direction
-    , _clientHealth        = _health $ e ^. entityData
-    , _clientStatistics    = fromMaybe (Statistics 0 0) $ e ^? entityData . statistics
-    }
-
-entityFromClientInfo :: PlayerAnimationTable -> ClientInfo -> Entity
-entityFromClientInfo table info = Entity id body Blank edata direction 
-    where
-        edata = PlayerData 
-            { _health        = info ^. clientHealth
-            , _statistics    = info ^. clientStatistics
-            , _name          = info ^. clientName
-            , _currentState  = info ^. clientState
-            , _animations    = table
-            } 
-        body      = info ^. clientBody
-        direction = info ^. clientDirection
-        id        = info ^. clientID     
 
 keyboardInfo :: KeyboardInfo
 keyboardInfo = KeyboardInfo False False False False

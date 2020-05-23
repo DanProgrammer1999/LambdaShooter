@@ -54,9 +54,7 @@ app name conn  = do
         serverInfoMsg <- WS.receiveData conn
         let serverInfo = decode serverInfoMsg :: Maybe [ClientInfo]
         case serverInfo of
-            Just info -> do
-                putStrLn "Client: Got information from server."
-                atomically $ writeTVar otherInfo info
+            Just info -> atomically $ writeTVar otherInfo info
             Nothing   -> do
                 putStrLn "Client: Got Nothing from server (probably bad decode)."
                 return ()
@@ -78,22 +76,23 @@ clientMain :: Name -> IO ()
 clientMain name = 
     withSocketsDo $ WS.runClient defaultIP defaultPort "/" (app name)
 
-runClient :: TVar [ClientInfo] -> TVar ClientInfo -> World -> PlayerAnimationTable -> IO ()
-runClient otherInfo ourInfo world table = do
+debug :: TVar [ClientInfo] -> TVar ClientInfo -> World -> GameGraphics -> IO ()
+debug otherInfo ourInfo world gameGraphics= do
     putStrLn "Client: Starting the game..."
     playIO (InWindow "LambdaShooter" (1280, 720) (0, 0)) white simulationRate
-        world renderWorldIO handleInputIO (updateWorldIO otherInfo ourInfo table)
+     world (renderWorldIO gameGraphics) handleInputIO
+      (updateWorldIO otherInfo ourInfo table)
 
-renderWorldIO :: World -> IO Picture
-renderWorldIO = return . renderWorld
+renderWorldIO :: GameGraphics -> World -> IO Picture
+renderWorldIO = return . renderWorld 
 
 handleInputIO :: Event -> World -> IO World
 handleInputIO event world = return (handleInput event world)
 
-updateWorldIO :: TVar [ClientInfo] -> TVar ClientInfo -> PlayerAnimationTable
+updateWorldIO :: TVar [ClientInfo] -> TVar ClientInfo -> GameGraphics
  -> Float -> World  -> IO World
-updateWorldIO otherInfo ourInfo playerAnimationTable timePassed world  = do
-    -- | read the last information server has sent us
+updateWorldIO otherInfo ourInfo gameGraphics timePassed world  = do
+    -- | read the last information server have sent us
     clientsInfoIO <- readTVarIO otherInfo
     -- | clientsInfo -> Entities
     let newEntities = map (entityFromClientInfo playerAnimationTable) clientsInfoIO :: [Entity]

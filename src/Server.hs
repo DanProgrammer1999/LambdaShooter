@@ -6,9 +6,8 @@ import Data.Monoid (mappend)
 import Data.Text (Text)
 import Control.Exception (finally)
 import Control.Monad (forM, forM_, forever, unless, join)
-import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
+import Control.Concurrent
 import Control.Monad.IO.Class (liftIO)
-import Control.Concurrent (threadDelay, forkIO)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
