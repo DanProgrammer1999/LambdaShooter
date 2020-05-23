@@ -68,8 +68,8 @@ bulletOffset = 10
 defaultBulletVelocity :: (Float, Float)
 defaultBulletVelocity = (50, 0)
 
-defaultBulletPower :: Float
-defaultBulletPower = 15
+baseBulletPower :: Float
+baseBulletPower = 15
 
 -- in seconds
 maxShootingCooldown :: Float 
