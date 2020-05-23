@@ -5,6 +5,7 @@ module Constructors
     , clientInfoFromEntity
     , entityFromClientInfo
     , keyboardInfo
+    , playerStatistics
     ) where
 
 import Control.Lens
@@ -42,7 +43,7 @@ playerCollisionBox :: CollisionBox
 playerCollisionBox = RectangleBox 40 80
 
 playerStatistics :: PlayerStatistics
-playerStatistics = Statistics 0 0
+playerStatistics = Statistics 0 0 0
 
 clientInfoFromEntity :: Entity -> ClientInfo
 clientInfoFromEntity e = ClientInfo 
@@ -52,7 +53,7 @@ clientInfoFromEntity e = ClientInfo
     , _clientState         = fromMaybe EmptyState $ e ^? entityData . currentState
     , _clientDirection     = e ^. direction
     , _clientHealth        = _health $ e ^. entityData
-    , _clientStatistics    = fromMaybe (Statistics 0 0) $ e ^? entityData . statistics
+    , _clientStatistics    = fromMaybe playerStatistics $ e ^? entityData . statistics
     }
 
 entityFromClientInfo :: PlayerAnimationTable -> ClientInfo -> Entity

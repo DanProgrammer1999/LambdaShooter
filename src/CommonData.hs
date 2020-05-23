@@ -19,6 +19,7 @@ type Velocity = Point
 type Name     = String
 type ID       = Int
 type Health   = Float
+type Score    = Float
 
 data PlayerState 
     = Idle 
@@ -82,8 +83,9 @@ instance ToJSON   Body
 instance FromJSON Body
 
 data PlayerStatistics = Statistics
-    { _deaths :: Integer
-    , _kills  :: Integer
+    { _deaths :: Int
+    , _kills  :: Int
+    , _level  :: Int
     }
     deriving (Generic, Show)
 makeLenses ''PlayerStatistics

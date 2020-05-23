@@ -52,6 +52,11 @@ maxHealth = 100
 playerSpawnPosition :: (Float, Float)
 playerSpawnPosition = (0, 100)
 
+-------- Logic --------
+
+killsToLevelUp :: [Int]
+killsToLevelUp = [1, 5, 10, 20, 35, 50, 75, 100]
+
 ----- Projectiles -----
 
 bulletWeight :: Float
@@ -64,7 +69,7 @@ defaultBulletVelocity :: (Float, Float)
 defaultBulletVelocity = (50, 0)
 
 defaultBulletPower :: Float
-defaultBulletPower = 35
+defaultBulletPower = 15
 
 -- in seconds
 maxShootingCooldown :: Float 

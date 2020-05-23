@@ -139,6 +139,15 @@ checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 
 
         box1 = entity1 ^. entityBody . bodyCollisionBox
         box2 = entity2 ^. entityBody . bodyCollisionBox
+    
+calculateLevel :: PlayerStatistics -> Score
+calculateLevel (Statistics _ kills _) = findLevel 0 killsToLevelUp
+    where 
+        findLevel idx [] = 0
+        findLevel idx (x : xs)
+            | kills >= x  = idx
+            | otherwise  = findLevel (idx + 1) xs
+
 
 getNewAnimation :: Float -> Entity -> Bool -> [(PlayerState, Animation)]
 getNewAnimation timePassed player wasStateChange = newPlayerTable
