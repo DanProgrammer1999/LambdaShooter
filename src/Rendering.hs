@@ -12,8 +12,8 @@ import Constants
 import Constructors (getDefaultPicture)
 import Data.Maybe
 
-renderWorld :: GameGraphics -> World -> Picture
-renderWorld graphics world
+renderWorld :: Universe -> Picture
+renderWorld (Universe world graphics) 
     =  renderMap graphics (world ^. worldMap)
     <> renderEntities graphics allEntities
     <> renderBodies (map _entityBody allEntities)

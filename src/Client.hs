@@ -69,7 +69,7 @@ app name conn  = do
     _ <- forkIO $ sendInfoToServer conn myInfo
     -- | Load Graphics(Assets) & Start playing
     graphics <- loadGameGraphics
-    debug uniqueID otherInfo myInfo world graphics
+    debug uniqueID otherInfo myInfo (Universe world graphics)
     -- | In case we stop to play (closed game window) we close connection with server
     WS.sendClose conn ("Bye!" :: Text)
     putStrLn "Client: Disconnected"
@@ -79,22 +79,21 @@ clientMain :: Name -> IO ()
 clientMain name = 
     withSocketsDo $ WS.runClient defaultIP defaultPort "/" (app name)
 
-debug :: ID -> TVar World -> TVar World -> World -> GameGraphics -> IO ()
-debug playerID otherInfo ourInfo world gameGraphics = do
+debug :: ID -> TVar World -> TVar World -> Universe -> IO ()
+debug playerID otherInfo ourInfo u@(Universe world graphics) = do
     putStrLn "Client: Starting the game..."
     playIO (InWindow "LambdaShooter" defaultWindowSize (0, 0)) white simulationRate
-     world (renderWorldIO gameGraphics) handleInputIO
-      (updateWorldIO playerID otherInfo ourInfo gameGraphics)
+     u renderWorldIO  handleInputIO
+      (updateWorldIO playerID otherInfo ourInfo)
 
-renderWorldIO :: GameGraphics -> World -> IO Picture
-renderWorldIO g = return . renderWorld g
+renderWorldIO :: Universe -> IO Picture
+renderWorldIO = return . renderWorld 
 
-handleInputIO :: Event -> World -> IO World
-handleInputIO event world = return (handleInput event world)
+handleInputIO :: Event -> Universe -> IO Universe
+handleInputIO event u = return (handleInput event u)
 
-updateWorldIO :: ID -> TVar World -> TVar World -> GameGraphics
- -> Float -> World -> IO World
-updateWorldIO myPlayerID otherInfo ourInfo gameGraphics timePassed world = do
+updateWorldIO :: ID -> TVar World -> TVar World -> Float -> Universe -> IO Universe
+updateWorldIO myPlayerID otherInfo ourInfo timePassed (Universe world graphics) = do
     -- | read the last information server have sent us
     serverWorld <- readTVarIO otherInfo
     let newEntities = serverWorld ^. players
@@ -108,9 +107,9 @@ updateWorldIO myPlayerID otherInfo ourInfo gameGraphics timePassed world = do
             players     .~ newEntitiesWithoutMe &
             projectiles .~ serverWorld ^. projectiles &
             myPlayer    .~ updatedPlayer
-    let newWorld = updateWorld timePassed world'
+    let Universe newWorld newGraphics = updateWorld timePassed (Universe world' graphics)
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
-    return newWorld{_myProjectiles = []}
+    return (Universe newWorld{_myProjectiles = []} graphics)
     

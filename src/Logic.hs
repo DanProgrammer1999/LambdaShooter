@@ -16,14 +16,18 @@ import Animation
 import Physics
 
 -- | Receive events and update the world
-handleInput :: Event -> World -> World
-handleInput (EventKey (Char c) state _ _) world
-    = world & keyboardData %~ keyAction (toLower c) (state == Down)
-handleInput (EventKey (SpecialKey KeySpace) state _ _) world
-    = world & keyboardData %~ keyAction ' ' (state == Down)
-handleInput (EventKey (MouseButton LeftButton) state _ _) world
-    = world & keyboardData . fireKeyPressed .~ (state == Down)
-handleInput _ world = world
+handleInput :: Event -> Universe -> Universe
+handleInput (EventKey (Char c) state _ _) (Universe world graphic)
+    = Universe newWorld graphic where
+        newWorld = world & keyboardData %~ keyAction (toLower c) (state == Down)
+handleInput (EventKey (SpecialKey KeySpace) state _ _) (Universe world graphic)
+    = Universe newWorld graphic where
+         newWorld = world & keyboardData %~ keyAction ' ' (state == Down)
+handleInput (EventKey (MouseButton LeftButton) state _ _) (Universe world graphic)
+    = Universe newWorld graphic where
+         newWorld = world & keyboardData . fireKeyPressed .~ (state == Down)
+
+handleInput _ u = u
 
 keyAction :: Char -> Bool -> KeyboardInfo -> KeyboardInfo
 keyAction 'a' isDown info = info & leftKeyPressed .~ isDown
@@ -31,11 +35,11 @@ keyAction 'd' isDown info = info & rightKeyPressed .~ isDown
 keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
-updateWorld ::GameGraphics Float -> World -> World
-updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectiles
+updateWorld ::Float -> Universe -> Universe
+updateWorld timePassed u@(Universe world graphics) =
+     Universe (withNewPlayer & projectiles .~ filteredProjectiles) newGraphics
     where
-        withNewPlayer = updateMyPlayer timePassed world
-
+        (Universe withNewPlayer newGraphics) = updateMyPlayer timePassed u
         oldProjectiles = withNewPlayer ^. projectiles
         updateProjectile = over entityBody $ updateBody timePassed world
         updatedProjectiles = updateProjectile <$> oldProjectiles
@@ -46,20 +50,21 @@ updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectile
             && not (isOutOfBounds (projectile ^. entityBody))
         filteredProjectiles = filter projectileFilter updatedProjectiles
 
-updateMyPlayer :: GameGraphics -> Float -> World -> World
-updateMyPlayer graphics timePassed world = world &~
-    do
-        myPlayer .= newPlayer
-        myPlayer . entityData . currentState .= newState
-        myPlayer . direction %= getNewDirection keyboard
-
-        projectiles %=
-            (\oldProjectiles ->
-                if willShoot then createBullet newPlayer : oldProjectiles else oldProjectiles
-            )
-        shootingCooldown %=
-            (\cooldown -> if willShoot then maxShootingCooldown else max 0 (cooldown - timePassed))
+updateMyPlayer :: Float -> Universe -> Universe
+updateMyPlayer  timePassed u@(Universe world graphics) = Universe newWorld newGraphics
     where
+        newWorld = world &~ do
+            myPlayer .= newPlayer
+            myPlayer . entityData . currentState .= newState
+            myPlayer . direction %= getNewDirection keyboard
+
+            projectiles %=
+                (\oldProjectiles ->
+                    if willShoot then createBullet newPlayer : oldProjectiles else oldProjectiles
+                )
+            shootingCooldown %=
+                (\cooldown -> if willShoot then maxShootingCooldown else max 0 (cooldown - timePassed))
+        newGraphics = graphics{_playerAnimations = newAnimations}
         keyboard = world ^. keyboardData
         oldPlayer = world ^. myPlayer
 
