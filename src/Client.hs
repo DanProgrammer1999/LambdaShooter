@@ -109,5 +109,5 @@ updateWorldIO myPlayerID otherInfo ourInfo timePassed (Universe world graphics) 
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
-    return (Universe newWorld{_myProjectiles = []} newGraphics)
+    return (Universe newWorld newGraphics)
     

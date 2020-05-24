@@ -13,14 +13,15 @@ sampleWorld uniqueID name playerColBox
     = World worldMap' [] [] [] player keyboardInfo maxShootingCooldown
     where
         player = makePlayer uniqueID name
-        worldMap' = Map 2000 2000 sampleBlocks
+        worldMap' = Map sampleBlocks
 
 sampleBlocks :: [Block]
 sampleBlocks = 
     [
-        Block (0, -200)    800 100,
-        Block (200,  30)   200 40,
-        Block (-400, -50)  60  200
+        Block (0, -200)   800 100,
+        Block (200, 70)   200 30,
+        Block (-300, -60) 40  150,
+        Block (0, -50)     200 30
     ]
 
 sampleBlockTexture :: Float -> Float -> Picture

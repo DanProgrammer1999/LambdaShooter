@@ -140,10 +140,8 @@ instance ToJSON   Block
 instance FromJSON Block
 
 data Map = Map
-    { _maxWidth   :: Float
-    , _maxHeight  :: Float
-    , _blocks     :: [Block]
-    } deriving (Generic, Show)
+    { _blocks :: [Block]} 
+    deriving (Generic, Show)
 makeLenses ''Map
 
 instance ToJSON   Map
