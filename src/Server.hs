@@ -68,12 +68,11 @@ updateFromClientWorld clientWorld (oldWorld, clients) = return (newWorld,clients
         projectiles .= (clientWorld  ^. myProjectiles) ++ (oldWorld ^. projectiles)
         players .= newPlayers
 
--- | TODO IMPORTANT UPDATE KILLS
 doDamage :: Entity -> Float -> Entity
 doDamage e@(Entity id body eData dir) dmg = e & entityData .~ eDataUpdated
     where
-        newHealth = _health eData - dmg
-        oldState = _currentState eData
+        newHealth = fromMaybe 0 (eData ^? health) - dmg
+        oldState = fromMaybe Idle $ eData ^? currentState
         newState = if newHealth <= 0 then Dying else oldState
         eDataUpdated = eData &~ do
             health       .= newHealth
@@ -83,7 +82,7 @@ doDamage e@(Entity id body eData dir) dmg = e & entityData .~ eDataUpdated
         oldStatistics = fromMaybe playerStatistics $ eData ^? statistics
         oldDeaths     = oldStatistics ^. deaths
         toAddDeaths   = if newHealth <= 0 then 1 else 0
-        newStatistics = oldStatistics{_deaths = oldDeaths + toAddDeaths}
+        newStatistics = oldStatistics & deaths +~ toAddDeaths
 
 makeAliveIfNeed :: Entity -> Entity
 makeAliveIfNeed e@(Entity id body eData dir) = newEntity where
@@ -93,24 +92,49 @@ makeAliveIfNeed e@(Entity id body eData dir) = newEntity where
     eDataUpdated = eData{_currentState = Falling, _health = defaultHP}
     bodyUpdated  = body {_bodyPosition = defaultPosition}
 
-updateServerWorld :: World -> World
-updateServerWorld oldWorld@(World wMap projectiles _ players _ _ _) = newWorld where
-    freeProjectiles =
-         filter (not . detectEntitiesCollision players . view entityBody) projectiles
-    collidedProjectiles =
-         filter (detectEntitiesCollision players . view entityBody) projectiles
-    newPlayers = map (makeAliveIfNeed . damageIfHit) players
+-- | Update kills statistic given the ids of killers
+updateKillsStatistic :: [Entity] -> [ID] -> [Entity]
+updateKillsStatistic allPlayers killersIds = map updatePlayer allPlayers 
+    where
+        updatePlayer :: Entity -> Entity
+        updatePlayer playerEntity
+            | playerEntity ^. entityID `elem` killersIds 
+                = playerEntity & entityData . statistics . kills +~ 1
+            | otherwise = playerEntity 
 
-    damageIfHit aPlayer =
-        if not (null hitBullets)
-        then doDamage aPlayer damage
-        else aPlayer
-        where
-            hitBullets = filter (checkEntityCollision aPlayer) collidedProjectiles
-            damage
-                = sum (map (fromMaybe baseBulletPower . preview (entityData . projectilePower)) hitBullets)
+updateServerWorld :: World -> World
+updateServerWorld oldWorld@(World wMap allProjectiles _ allPlayers _ _ _) 
+    = oldWorld &~
+    do
+        players .= rewardedPlayers 
+        projectiles .= freeProjectiles
+    where
+    freeProjectiles =
+         filter (not . detectEntitiesCollision allPlayers . view entityBody) allProjectiles
+    collidedProjectiles =
+         filter (detectEntitiesCollision allPlayers . view entityBody) allProjectiles
+    checkHit = map damageIfHit allPlayers
+    newPlayers = map (makeAliveIfNeed . fst) checkHit
+    killingIds = mconcat $ map (fromMaybe [] . snd) checkHit
+
+    rewardedPlayers = updateKillsStatistic newPlayers killingIds
 
     newWorld = oldWorld{_players = newPlayers, _projectiles = freeProjectiles}
+
+    damageIfHit :: Entity -> (Entity, Maybe [ID])
+    damageIfHit aPlayer
+        | null hitBullets = (aPlayer, Nothing)
+        | otherwise = (damagedPlayer, killingIds)
+        where
+            hitBullets = filter (checkEntityCollision aPlayer) collidedProjectiles
+            bulletPower = fromMaybe baseBulletPower . preview (entityData . projectilePower)
+            damage
+                = sum (map bulletPower hitBullets)
+            damagedPlayer = doDamage aPlayer damage
+            killingIds =
+                if fromMaybe 0 (damagedPlayer ^? entityData . health) <= 0
+                then Just (map (view entityID) hitBullets)
+                else Nothing
 
 -----------------------------------------------------------
 

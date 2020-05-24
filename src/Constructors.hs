@@ -18,8 +18,8 @@ getDefaultPicture :: Picture
 getDefaultPicture = color yellow $ rectangleSolid 100 100
 
 makeBullet :: Float -> Position -> Direction -> ID -> Entity
-makeBullet bulletPower origin direction ownerID =
-     Entity bulletID body (ProjectileData bulletPower ownerID) direction
+makeBullet bulletPower origin direction ownerID 
+    = Entity bulletID body (ProjectileData bulletPower ownerID) direction
     where
         velocity = defaultBulletVelocity & _1 *~ (if direction == LeftDirection then -1 else 1)
         body = Body origin velocity bulletWeight bulletCollisionBox False
