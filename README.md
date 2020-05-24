@@ -17,7 +17,14 @@ After the server is ready, you can launch a client. For that, use `stack run cli
 
 ### Server
 
-TODO Alex
+Well, the most recent version uses these important types:
+- `type Client      = (ID, WS.Connection)`
+- `type ServerState = (World, [Client])`
+
+On a server we keep only one world which is to be trated as the most "recent" & "trustful".
+From each client we create a separate thread which waits for client World and merges it with our one.
+Then all the changes are broadcasted to all Clients so that they get the most recent changes and game looks as smooth as possible.
+Server is also resposible for calculation the collision between player and projectiles, do damage to players and change their statistics.
 
 ### Client
 
