@@ -109,7 +109,7 @@ loadPlayerAnimations = do
         f (s, path, isOnce) =  (s, loadAnimation path isOnce)
 
 loadBackgroundPicture :: IO Picture
-loadBackgroundPicture = return Blank
+loadBackgroundPicture = loadPicture "resources/background.png"
  
 loadBulletPicture :: IO Picture
 loadBulletPicture = return $ color black $ circleSolid 5
