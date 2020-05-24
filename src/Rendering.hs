@@ -65,7 +65,7 @@ getPlayerPicture graphics player
         namePicture
             = text (playerName ++ " (" ++ show playerLevel ++ " lvl.)")
             & color red 
-            & translate (-playerPictureWidth/2 - 100) (playerPictureHeight/2 + nameYOffset)
+            & translate (-playerPictureWidth/2 - 50) (playerPictureHeight/2 + nameYOffset)
             & scale 0.7 0.7
         
         playerHealth = fromMaybe 0 (player ^? entityData . health)

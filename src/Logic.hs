@@ -1,4 +1,4 @@
-module Logic (handleInput, updateWorld) where
+module Logic (handleInput, updateWorld, checkEntityCollision) where
 
 import Control.Lens
 import Data.Maybe

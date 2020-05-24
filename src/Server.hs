@@ -9,7 +9,7 @@ import Control.Lens
 
 import qualified Network.WebSockets as WS
 
-import Data.Aeson
+import Data.Aeson hiding ((.=))
 import Data.Maybe
 import Data.Char (isPunctuation, isSpace)
 import Data.Monoid (mappend)
@@ -19,9 +19,11 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Physics
+import Logic
 import CommonData
 import Demo
 import Constants
+import Constructors
 
 type Client = (ID, WS.Connection)
 
@@ -44,43 +46,44 @@ addClient (player, newClient) (world, clients) = (world, newClient : clients) wh
 
 removeClient :: (Entity, Client) -> ServerState -> ServerState
 removeClient (player, client) (world, clients) = (newWorld, newClients) where
-    playerID = fst client 
+    playerID = fst client
     newClients = filter ((/= playerID).fst) clients
-    newWorld = world {_players = filter ((/= playerID ) . view entityID) (world ^. players)} 
+    newWorld = world {_players = filter ((/= playerID ) . view entityID) (world ^. players)}
 
 generateUniqueID :: ServerState -> IO Int
 generateUniqueID ss = do
     let n = length (snd ss) + 10
     randList <- forM [1 .. n] $ \_i -> randomRIO (1, 100000)
     let cleanList = filter (not . isUnique ss) randList
-    return $ head cleanList 
+    return $ head cleanList
 
 ---------- World & Entity updates -----------------------
-updateFromClientWorld :: World -> ServerState -> IO ServerState 
+updateFromClientWorld :: World -> ServerState -> IO ServerState
 updateFromClientWorld clientWorld (oldWorld, clients) = return (newWorld,clients) where
     clientID = clientWorld ^. myPlayer . entityID
     otherPlayers = filter ((clientID /=) . view entityID) (oldWorld ^. players)
     clientPlayer = clientWorld ^. myPlayer
     newPlayers = clientPlayer : otherPlayers
-    newWorld = oldWorld
-        {_projectiles = (clientWorld  ^. myProjectiles) ++ (oldWorld ^. projectiles),
-         _players = newPlayers
-        }
+    newWorld = oldWorld &~ do
+        projectiles .= (clientWorld  ^. myProjectiles) ++ (oldWorld ^. projectiles)
+        players .= newPlayers
 
 -- | TODO IMPORTANT UPDATE KILLS
 doDamage :: Entity -> Float -> Entity
-doDamage e@(Entity id body eData dir) dmg = e {_entityData = eDataUpdated} where
-    newHealth = _health eData - dmg
-    oldState = _currentState eData    
-    newState = if newHealth <= 0 then Dying else oldState 
-    eDataUpdated = eData {
-        _health       = newHealth,
-        _currentState = newState,
-        _statistics   = newStatistics}
-    oldStatistics = _statistics eData
-    oldDeaths     = _deaths oldStatistics 
-    toAddDeaths   = if newHealth <= 0 then 1 else 0 
-    newStatistics = oldStatistics{_deaths = oldDeaths + toAddDeaths}
+doDamage e@(Entity id body eData dir) dmg = e & entityData .~ eDataUpdated
+    where
+        newHealth = _health eData - dmg
+        oldState = _currentState eData
+        newState = if newHealth <= 0 then Dying else oldState
+        eDataUpdated = eData &~ do
+            health       .= newHealth
+            currentState .= newState
+            statistics   .= newStatistics
+
+        oldStatistics = fromMaybe playerStatistics $ eData ^? statistics
+        oldDeaths     = oldStatistics ^. deaths
+        toAddDeaths   = if newHealth <= 0 then 1 else 0
+        newStatistics = oldStatistics{_deaths = oldDeaths + toAddDeaths}
 
 makeAliveIfNeed :: Entity -> Entity
 makeAliveIfNeed e@(Entity id body eData dir) = newEntity where
@@ -90,19 +93,23 @@ makeAliveIfNeed e@(Entity id body eData dir) = newEntity where
     eDataUpdated = eData{_currentState = Falling, _health = defaultHP}
     bodyUpdated  = body {_bodyPosition = defaultPosition}
 
--- TODO VERY IMPORTANT:: dmg should come from bullet.
--- not just 20
 updateServerWorld :: World -> World
 updateServerWorld oldWorld@(World wMap projectiles _ players _ _ _) = newWorld where
     freeProjectiles =
-         filter (not . detectEntitiesCollision players . _entityBody) projectiles
+         filter (not . detectEntitiesCollision players . view entityBody) projectiles
     collidedProjectiles =
-         filter (detectEntitiesCollision players . _entityBody) projectiles
-    newPlayers = map (makeAliveIfNeed . f) players
-    f :: Entity -> Entity
-    f e = if detectEntitiesCollision collidedProjectiles $ e ^. entityBody
-        then doDamage e 20
-        else e
+         filter (detectEntitiesCollision players . view entityBody) projectiles
+    newPlayers = map (makeAliveIfNeed . damageIfHit) players
+
+    damageIfHit aPlayer =
+        if not (null hitBullets)
+        then doDamage aPlayer damage
+        else aPlayer
+        where
+            hitBullets = filter (checkEntityCollision aPlayer) collidedProjectiles
+            damage
+                = sum (map (fromMaybe baseBulletPower . preview (entityData . projectilePower)) hitBullets)
+
     newWorld = oldWorld{_players = newPlayers, _projectiles = freeProjectiles}
 
 -----------------------------------------------------------
@@ -137,16 +144,16 @@ application state pending = do
     conn <- WS.acceptRequest pending
     print "Someone connected.\n"
     -- | Ping connection to make sure it is alive
-    WS.forkPingThread conn 30 
+    WS.forkPingThread conn 30
 
     -- | Get current state (all clients)
     clients <- liftIO $ readMVar state
 
     -- | Generate and Send unique ID
-    uniqueID <- generateUniqueID clients :: IO ID    
+    uniqueID <- generateUniqueID clients :: IO ID
     WS.sendTextData conn (T.pack $ show uniqueID)
-    
-    clientInfoMsg <- WS.receiveData conn 
+
+    clientInfoMsg <- WS.receiveData conn
     -- formJust is ok here as it simply will not allow "bad Player" to connect
     let clientPlayer = fromJust $ decode clientInfoMsg :: Entity
     -- if fromJust doesn't work then connectionFail and it is ok
@@ -159,11 +166,11 @@ application state pending = do
     flip finally disconnect $ do
         liftIO $ modifyMVar_ state (return.addClient (clientPlayer, clientInfo))
         handleClient state clientInfo
-        
+
 
 handleClient :: MVar ServerState -> Client -> IO ()
 handleClient state (playerID, conn) = forever $ do
-    clientWorldMsg <- WS.receiveData conn 
+    clientWorldMsg <- WS.receiveData conn
     let receivedWorld = decode clientWorldMsg :: Maybe World
     case receivedWorld of
             Just newWorld -> do
@@ -174,5 +181,5 @@ handleClient state (playerID, conn) = forever $ do
                 return ()
             Nothing   -> do
                 putStrLn ("Server talk: Got Nothing from client with id = "
-                    ++ show playerID) 
+                    ++ show playerID)
                 return ()

@@ -98,7 +98,7 @@ entitiesScale :: Float
 entitiesScale = 0.2
 
 playerPictureWidth :: Float
-playerPictureWidth = 420
+playerPictureWidth = 478
 
 playerPictureHeight :: Float
 playerPictureHeight = 480
