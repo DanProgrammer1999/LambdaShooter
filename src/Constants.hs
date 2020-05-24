@@ -13,7 +13,7 @@ defaultPort = 3579
 -- | how often to sent data (for both client & server)
 -- | 1000000 is 1 second.
 delaySending :: Int
-delaySending = 1000000
+delaySending = 10000
 
 ----- Physics -----
 

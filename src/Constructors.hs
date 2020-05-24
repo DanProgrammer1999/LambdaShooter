@@ -41,7 +41,7 @@ playerCollisionBox :: CollisionBox
 playerCollisionBox = RectangleBox 40 80
 
 playerStatistics :: PlayerStatistics
-playerStatistics = Statistics 0 0 0
+playerStatistics = Statistics 0 0 0 0
 
 keyboardInfo :: KeyboardInfo
 keyboardInfo = KeyboardInfo False False False False

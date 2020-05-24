@@ -96,24 +96,6 @@ updateWorldIO :: ID -> TVar World -> TVar World -> GameGraphics
  -> Float -> World -> IO World
 updateWorldIO myPlayerID otherInfo ourInfo gameGraphics timePassed world = do
     -- | read the last information server have sent us
-<<<<<<< Updated upstream
-    clientsInfoIO <- readTVarIO otherInfo
-    newWindowSize <- getScreenSize
-    -- | clientsInfo -> Entities
-    let newEntities = map (entityFromClientInfo playerAnimationTable) clientsInfoIO :: [Entity]
-    let playerID = world ^. myPlayer . entityID
-    let newEntitiesWithoutMe = filter ((playerID /=) . view entityID) newEntities
-    let newWorld 
-            = world 
-            & players .~ newEntitiesWithoutMe 
-            & windowSize .~ newWindowSize
-    let updatedWorld = updateWorld timePassed newWorld
-    
-    -- | Modify variable which is used to notify server about our player movements
-    atomically $ writeTVar ourInfo (clientInfoFromEntity $ updatedWorld ^. myPlayer)
-    -- | update new world with entites from the server.
-    return updatedWorld
-=======
     serverWorld <- readTVarIO otherInfo
     let newEntities = serverWorld ^. players
     let newEntitiesWithoutMe =  filter ((myPlayerID /=) . view entityID) newEntities
@@ -122,11 +104,13 @@ updateWorldIO myPlayerID otherInfo ourInfo gameGraphics timePassed world = do
             _currentState (world ^. myPlayer . entityData) == Dying ||
             _currentState (serverPlayer     ^. entityData) == Dying
     let updatedPlayer = if acceptServerPlayer then serverPlayer else world ^. myPlayer
-    let world' = serverWorld & players .~ newEntitiesWithoutMe & myPlayer .~ updatedPlayer
-    let newWorld = updateWorld timePassed world
+    let world' = world &
+            players     .~ newEntitiesWithoutMe &
+            projectiles .~ serverWorld ^. projectiles &
+            myPlayer    .~ updatedPlayer
+    let newWorld = updateWorld timePassed world'
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
     return newWorld{_myProjectiles = []}
->>>>>>> Stashed changes
     

@@ -31,7 +31,7 @@ keyAction 'd' isDown info = info & rightKeyPressed .~ isDown
 keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
-updateWorld :: Float -> World -> World
+updateWorld ::GameGraphics Float -> World -> World
 updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectiles
     where
         withNewPlayer = updateMyPlayer timePassed world
@@ -46,8 +46,8 @@ updateWorld timePassed world = withNewPlayer & projectiles .~ filteredProjectile
             && not (isOutOfBounds (projectile ^. entityBody))
         filteredProjectiles = filter projectileFilter updatedProjectiles
 
-updateMyPlayer :: Float -> World -> World
-updateMyPlayer timePassed world = world &~
+updateMyPlayer :: GameGraphics -> Float -> World -> World
+updateMyPlayer graphics timePassed world = world &~
     do
         myPlayer .= newPlayer
         myPlayer . entityData . currentState .= newState
@@ -78,10 +78,10 @@ updateMyPlayer timePassed world = world &~
                 canShoot = world ^. shootingCooldown == 0 && (oldState /= Dying) 
         
         newState = if willShoot then Shooting else getNewState newPlayer
-        -- newAnimations = getNewAnimation timePassed newPlayer (newState /= oldState)
+        newAnimations = getNewPlayerAnimations graphics timePassed newPlayer (newState /= oldState)
 
 createBullet :: Entity -> Entity
-createBullet player = makeBullet bulletPower bulletPosition (player ^. direction)
+createBullet player = makeBullet bulletPower bulletPosition (player ^. direction) playerID
     where
         playerID = player ^. entityID
         (x, y) = player ^. entityBody . bodyPosition
@@ -92,9 +92,9 @@ createBullet player = makeBullet bulletPower bulletPosition (player ^. direction
                 LeftDirection -> -1
                 RightDirection -> 1
 
-        xOffset = directionMultiplier*w/2 + bulletOffset
+        xOffset = directionMultiplier * w/2 + bulletOffset
         bulletPosition = (x + xOffset, y)
-        bulletPower = baseBulletPower*(1 + (fromIntegral playerLevel)*0.1)
+        bulletPower = baseBulletPower * (1 + fromIntegral playerLevel * 0.1)
 
 getNewState :: Entity -> PlayerState
 getNewState entity
@@ -144,7 +144,7 @@ checkEntityCollision entity1 entity2 = detectCollision position1 position2 box1 
         box2 = entity2 ^. entityBody . bodyCollisionBox
     
 calculateLevel :: PlayerStatistics -> Int
-calculateLevel (Statistics deaths kills _) = max 0 newLevel
+calculateLevel (Statistics deaths kills _ _) = max 0 newLevel
     where 
         findLevel idx [] = 0
         findLevel idx (x : xs)
@@ -154,18 +154,19 @@ calculateLevel (Statistics deaths kills _) = max 0 newLevel
         newLevel = findLevel 0 killsToLevelUp - deaths
 
 
--- TODO IMPORTANT TURN IT BACK CORRECTLY!
--- getNewAnimation :: Float -> Entity -> Bool -> PlayerAnimationTable
--- getNewAnimation timePassed player wasStateChange = newPlayerTable
---     where
---         -- | Update Animation should be done for all players
---         curState = fromMaybe EmptyState (player ^? entityData . currentState)
---         -- | Calculate new Animation
---         oldPlayerAnimation = fromMaybe getDefaultAnimation $ getAnimationFromEntity player
---         newPlayerAnimation = newAnimation where
---             anim = updateAnimation timePassed oldPlayerAnimation
---             newAnimation = if wasStateChange then anim {_curFrame = 0} else anim
---         -- | Calculate new Animation Table
---         oldPlayerTable = player ^. entityData . animations
---         newPlayerTable = (curState, newPlayerAnimation)
---             : filter (\(state, _) -> state /= curState) oldPlayerTable
+
+getNewPlayerAnimations :: GameGraphics -> Float -> Entity -> Bool -> PlayerAnimationTable
+getNewPlayerAnimations graphics timePassed player wasStateChange = newPlayerTable
+    where
+        -- | Update Animation should be done for all players
+        curState = fromMaybe EmptyState (player ^? entityData . currentState)
+        -- | Calculate new Animation
+        oldPlayerAnimation = fromMaybe getDefaultAnimation
+            $ getAnimationFromEntity graphics (player ^. entityData)
+        newPlayerAnimation = newAnimation where
+            anim = updateAnimation timePassed oldPlayerAnimation
+            newAnimation = if wasStateChange then anim {_curFrame = 0} else anim
+        -- | Calculate new Animation Table
+        oldPlayerTable = graphics ^. playerAnimations
+        newPlayerTable = (curState, newPlayerAnimation)
+            : filter (\(state, _) -> state /= curState) oldPlayerTable

@@ -17,7 +17,7 @@ renderWorld graphics world
     =  renderMap graphics (world ^. worldMap)
     <> renderEntities graphics allEntities
     <> renderBodies (map _entityBody allEntities)
-    <> renderUI (world ^. myPlayer . entityData)
+    <> renderUI world
     where
         allEntities = world ^. myPlayer : (world ^. players ++ world ^. projectiles)
 
@@ -113,7 +113,7 @@ renderUI world = deathsText <> killsText
         playerKills = fromMaybe 0 $ world ^? playerStats . kills
         playerDeaths = fromMaybe 0 $ world ^? playerStats . deaths
 
-        (width, height) = world ^. windowSize
+        (width, height) = defaultWindowSize
         (width', height') = (fromIntegral width, fromIntegral height)
 
         killsText 

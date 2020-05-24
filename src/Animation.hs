@@ -115,7 +115,7 @@ loadBulletPicture :: IO Picture
 loadBulletPicture = return $ color black $ circleSolid 5
 
 loadBlockPicture :: IO Picture
-loadBlockPicture = return $ color red $ rectangleSolid 20 100
+loadBlockPicture = loadPicture "resources/block.png"
 --------------------------------------------------------------------
 
 

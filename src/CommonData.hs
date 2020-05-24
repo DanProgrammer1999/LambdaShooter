@@ -171,6 +171,10 @@ data World = World
     } deriving (Generic, Show)
 makeLenses ''World
 
+data Universe = Universe
+    {_world :: World
+    ,_graphics :: GameGraphics   
+    }
 
 instance Eq Entity where
     (==) e1 e2 = e1 ^. entityID == e2 ^.entityID
