@@ -47,5 +47,4 @@ We implemented most of what we planned. Some notable features include:
 - levels depending on the statistics which increase the bullets power
 - etc.
 
-
--- TODO pic here
+![InGame picture](docs/supreme.png)
