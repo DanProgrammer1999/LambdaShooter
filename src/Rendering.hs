@@ -34,17 +34,14 @@ entityToPicture :: GameGraphics -> Entity -> Picture
 entityToPicture graphics entity = scaledAndTranslatedPic 
     where
         position = entity ^. entityBody . bodyPosition
-        playerPic = getPlayerPicture graphics entity
         
-        scaledPic = scale entitiesScale entitiesScale playerPic
+        scaledPic = scale entitiesScale entitiesScale correctPic
         scaledAndTranslatedPic =
             uncurry translate position scaledPic
 
-        getRightPic :: Entity -> Picture
-        getRightPic entity 
-            | isPlayer entity     = getPlayerPicture graphics entity
+        correctPic 
             | isProjectile entity = graphics ^. bulletPicture 
-
+            | isPlayer entity = getPlayerPicture graphics entity
 
 getPlayerPicture :: GameGraphics -> Entity -> Picture
 getPlayerPicture graphics player
