@@ -36,10 +36,10 @@ keyAction ' ' isDown info = info & jumpKeyPressed .~ isDown
 keyAction _ _        info = info
 
 updateWorld ::Float -> Universe -> Universe
-updateWorld timePassed u@(Universe world graphics) =
-     Universe (withNewPlayer & projectiles .~ filteredProjectiles) newGraphics
+updateWorld timePassed universe@(Universe world graphics) =
+    Universe (withNewPlayer & projectiles .~ filteredProjectiles) newGraphics
     where
-        (Universe withNewPlayer newGraphics) = updateMyPlayer timePassed u
+        (Universe withNewPlayer newGraphics) = updateMyPlayer timePassed universe
         oldProjectiles = withNewPlayer ^. projectiles
         updateProjectile = over entityBody $ updateBody timePassed world
         updatedProjectiles = updateProjectile <$> oldProjectiles
@@ -64,7 +64,7 @@ updateMyPlayer  timePassed u@(Universe world graphics) = Universe newWorld newGr
                 )
             shootingCooldown %=
                 (\cooldown -> if willShoot then maxShootingCooldown else max 0 (cooldown - timePassed))
-        newGraphics = graphics{_playerAnimations = newAnimations}
+        newGraphics = graphics & playerAnimations .~ newAnimations
         keyboard = world ^. keyboardData
         oldPlayer = world ^. myPlayer
 

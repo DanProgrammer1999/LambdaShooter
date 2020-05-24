@@ -140,6 +140,7 @@ broadcastServerWorld state = forever $ do
     -- | Send updated (server) world to each client
     let allConnections = map snd (snd newState)
     forM_ allConnections $ \conn -> WS.sendTextData conn encodedNewWorld
+    modifyMVar_  state $ \s -> return (newWorld, snd s)
 
 serverMain :: IO ()
 serverMain = do

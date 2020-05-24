@@ -43,7 +43,6 @@ sendInfoToServer :: WS.Connection -> TChan World -> IO ()
 sendInfoToServer conn myInfo = forever $ do
     myInfoCurrent <- atomically $ readTChan myInfo
     WS.sendTextData conn (encode myInfoCurrent)
-    return ()
 
 -- | Entry point when connection with server is established
 -- | and socket for communication is obtained
@@ -68,7 +67,7 @@ app name conn  = do
     _ <- forkIO $ sendInfoToServer conn myInfo
     -- | Load Graphics(Assets) & Start playing
     graphics <- loadGameGraphics
-    debug uniqueID otherInfo myInfo (Universe world graphics)
+    runClient uniqueID otherInfo myInfo (Universe world graphics)
     -- | In case we stop to play (closed game window) we close connection with server
     WS.sendClose conn ("Bye!" :: Text)
     putStrLn "Client: Disconnected"
@@ -78,12 +77,14 @@ clientMain :: Name -> IO ()
 clientMain name = 
     withSocketsDo $ WS.runClient defaultIP defaultPort "/" (app name)
 
-debug :: ID -> TChan World -> TChan World -> Universe -> IO ()
-debug playerID otherInfo ourInfo u@(Universe world graphics) = do
-    putStrLn "Client: Starting the game..."
-    playIO (InWindow "LambdaShooter" defaultWindowSize (0, 0)) white simulationRate
-     u renderWorldIO  handleInputIO
-      (updateWorldIO playerID otherInfo ourInfo)
+runClient :: ID -> TChan World -> TChan World -> Universe -> IO ()
+runClient playerID otherInfo ourInfo universe@(Universe world graphics) = 
+    do
+        putStrLn "Client: Starting the game..."
+        playIO 
+            (InWindow "LambdaShooter" defaultWindowSize (0, 0)) 
+            white simulationRate universe renderWorldIO  handleInputIO
+            (updateWorldIO playerID otherInfo ourInfo)
 
 renderWorldIO :: Universe -> IO Picture
 renderWorldIO = return . renderWorld 
@@ -94,7 +95,7 @@ handleInputIO event u = return (handleInput event u)
 updateWorldIO :: ID -> TChan World -> TChan World -> Float -> Universe -> IO Universe
 updateWorldIO myPlayerID otherInfo ourInfo timePassed u@(Universe world graphics) = do
     -- | read the last information server have sent us
-    serverWorldTry <- atomically $ tryReadTChan otherInfo
+    serverWorldTry <- atomically $ tryReadTChan otherInfo 
     Universe newWorld newGraphics <- case serverWorldTry of
             Just serverWorld -> do
                 let newEntities = serverWorld ^. players
@@ -103,9 +104,9 @@ updateWorldIO myPlayerID otherInfo ourInfo timePassed u@(Universe world graphics
                 let serverPlayer = if null serverPlayerList
                     then world ^. myPlayer
                     else head serverPlayerList 
-                let acceptServerPlayer =
-                        _currentState (world ^. myPlayer . entityData) == Dying ||
-                        _currentState (serverPlayer     ^. entityData) == Dying
+                let acceptServerPlayer 
+                        =  fromMaybe Idle (world ^? myPlayer . entityData . currentState) == Dying
+                        || fromMaybe Idle (serverPlayer ^? entityData . currentState) == Dying
                 let updatedPlayer = if acceptServerPlayer then serverPlayer else world ^. myPlayer
                 let world' = world &
                         players     .~ newEntitiesWithoutMe &
@@ -113,11 +114,8 @@ updateWorldIO myPlayerID otherInfo ourInfo timePassed u@(Universe world graphics
                         myPlayer    .~ updatedPlayer
                 return $ updateWorld timePassed (Universe world' graphics)
             Nothing -> return $ updateWorld timePassed (Universe world graphics)
-                
 
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTChan ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
-    return (Universe newWorld{_myProjectiles = []} newGraphics)
-
-    
+    return (Universe (newWorld & myProjectiles .~ []) newGraphics)
