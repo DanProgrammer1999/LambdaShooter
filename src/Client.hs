@@ -4,8 +4,8 @@ module Client where
 import           Control.Monad       (forever, unless)
 import           Control.Monad.Trans (liftIO)
 import           Network.Socket      (withSocketsDo)
-import           Data.Text           hiding (map, filter, head)
-import qualified Data.Text           as T
+import           Data.Text           hiding (map, filter, head, null)
+import qualified Data.Text           as T 
 import qualified Data.Text.IO        as T
 import qualified Network.WebSockets  as WS
 
@@ -96,7 +96,10 @@ updateWorldIO myPlayerID otherInfo ourInfo timePassed (Universe world graphics) 
     serverWorld <- readTVarIO otherInfo
     let newEntities = serverWorld ^. players
     let newEntitiesWithoutMe =  filter ((myPlayerID /=) . view entityID) newEntities
-    let serverPlayer = head $   filter ((myPlayerID ==) . view entityID) newEntities :: Entity
+    let serverPlayerList     =  filter ((myPlayerID ==) . view entityID) newEntities :: [Entity]
+    let serverPlayer = if null serverPlayerList
+         then world ^. myPlayer
+         else head serverPlayerList 
     let acceptServerPlayer =
             _currentState (world ^. myPlayer . entityData) == Dying ||
             _currentState (serverPlayer     ^. entityData) == Dying
