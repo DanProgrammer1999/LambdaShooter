@@ -135,8 +135,8 @@ broadcastServerWorld state = forever $ do
     let newWorld = updateServerWorld oldWorld
     let encodedNewWorld = encode newWorld
     -- | Debug Info
-    print "Current Clients are: "
-    print (map fst (snd newState))
+    print "Current projectiles length"
+    print (length $ newWorld^.projectiles)
     -- | Send updated (server) world to each client
     let allConnections = map snd (snd newState)
     forM_ allConnections $ \conn -> WS.sendTextData conn encodedNewWorld
@@ -185,11 +185,11 @@ handleClient state (playerID, conn) = forever $ do
     case receivedWorld of
             Just newWorld -> do
                 -- | We remove this client's old world and add newWorld for this client
-                putStrLn ("Server talk: Got Nothing from client with id = "
-                    ++ show playerID)
+                -- putStrLn ("Server talk: Got Nothing from client with id = "
+                --     ++ show playerID)
                 liftIO $ modifyMVar_ state $ updateFromClientWorld newWorld
                 return ()
             Nothing   -> do
-                putStrLn ("Server talk: Got Nothing from client with id = "
-                    ++ show playerID)
+                -- putStrLn ("Server talk: Got Nothing from client with id = "
+                --     ++ show playerID)
                 return ()

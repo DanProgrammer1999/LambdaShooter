@@ -27,22 +27,23 @@ import           Logic
 import           Rendering
 import           Demo                (sampleWorld)
 
-receiveInfoFromServer :: WS.Connection -> TVar World -> IO ()
+receiveInfoFromServer :: WS.Connection -> TChan World -> IO ()
 receiveInfoFromServer conn otherInfo = forever $ do
     serverInfoMsg <- WS.receiveData conn
     let serverInfo = decode serverInfoMsg :: Maybe World
     case serverInfo of
-        Just info -> 
-            atomically $ writeTVar otherInfo info
+        Just info -> do 
+            atomically $ writeTChan otherInfo info
+            return ()
         Nothing   -> do
             putStrLn "Client: Got Nothing from server (probably bad decode)."
             return ()
 
-sendInfoToServer :: WS.Connection -> TVar World -> IO ()
+sendInfoToServer :: WS.Connection -> TChan World -> IO ()
 sendInfoToServer conn myInfo = forever $ do
-    threadDelay delaySending
-    myInfoCurrent <- readTVarIO myInfo
+    myInfoCurrent <- atomically $ readTChan myInfo
     WS.sendTextData conn (encode myInfoCurrent)
+    return ()
 
 -- | Entry point when connection with server is established
 -- | and socket for communication is obtained
@@ -59,8 +60,8 @@ app name conn  = do
     WS.sendTextData conn (encode $ _myPlayer world)
     -- | Treat TVars for communication
     -- | They are non-blocking variable you can read & modify from different threads
-    otherInfo <- newTVarIO world :: IO (TVar World)
-    myInfo    <- newTVarIO world :: IO (TVar World)
+    otherInfo <- newTChanIO :: IO (TChan World)
+    myInfo    <- newTChanIO :: IO (TChan World)
     -- | Fork a thread that notifies us about other player's movements
     _ <- forkIO $ receiveInfoFromServer conn otherInfo
     -- | Fork a thread that notifies server about our movements
@@ -77,7 +78,7 @@ clientMain :: Name -> IO ()
 clientMain name = 
     withSocketsDo $ WS.runClient defaultIP defaultPort "/" (app name)
 
-debug :: ID -> TVar World -> TVar World -> Universe -> IO ()
+debug :: ID -> TChan World -> TChan World -> Universe -> IO ()
 debug playerID otherInfo ourInfo u@(Universe world graphics) = do
     putStrLn "Client: Starting the game..."
     playIO (InWindow "LambdaShooter" defaultWindowSize (0, 0)) white simulationRate
@@ -90,27 +91,33 @@ renderWorldIO = return . renderWorld
 handleInputIO :: Event -> Universe -> IO Universe
 handleInputIO event u = return (handleInput event u)
 
-updateWorldIO :: ID -> TVar World -> TVar World -> Float -> Universe -> IO Universe
-updateWorldIO myPlayerID otherInfo ourInfo timePassed (Universe world graphics) = do
+updateWorldIO :: ID -> TChan World -> TChan World -> Float -> Universe -> IO Universe
+updateWorldIO myPlayerID otherInfo ourInfo timePassed u@(Universe world graphics) = do
     -- | read the last information server have sent us
-    serverWorld <- readTVarIO otherInfo
-    let newEntities = serverWorld ^. players
-    let newEntitiesWithoutMe =  filter ((myPlayerID /=) . view entityID) newEntities
-    let serverPlayerList     =  filter ((myPlayerID ==) . view entityID) newEntities :: [Entity]
-    let serverPlayer = if null serverPlayerList
-         then world ^. myPlayer
-         else head serverPlayerList 
-    let acceptServerPlayer =
-            _currentState (world ^. myPlayer . entityData) == Dying ||
-            _currentState (serverPlayer     ^. entityData) == Dying
-    let updatedPlayer = if acceptServerPlayer then serverPlayer else world ^. myPlayer
-    let world' = world &
-            players     .~ newEntitiesWithoutMe &
-            projectiles .~ serverWorld ^. projectiles &
-            myPlayer    .~ updatedPlayer
-    let Universe newWorld newGraphics = updateWorld timePassed (Universe world' graphics)
+    serverWorldTry <- atomically $ tryReadTChan otherInfo
+    Universe newWorld newGraphics <- case serverWorldTry of
+            Just serverWorld -> do
+                let newEntities = serverWorld ^. players
+                let newEntitiesWithoutMe =  filter ((myPlayerID /=) . view entityID) newEntities
+                let serverPlayerList     =  filter ((myPlayerID ==) . view entityID) newEntities :: [Entity]
+                let serverPlayer = if null serverPlayerList
+                    then world ^. myPlayer
+                    else head serverPlayerList 
+                let acceptServerPlayer =
+                        _currentState (world ^. myPlayer . entityData) == Dying ||
+                        _currentState (serverPlayer     ^. entityData) == Dying
+                let updatedPlayer = if acceptServerPlayer then serverPlayer else world ^. myPlayer
+                let world' = world &
+                        players     .~ newEntitiesWithoutMe &
+                        projectiles .~ serverWorld ^. projectiles &
+                        myPlayer    .~ updatedPlayer
+                return $ updateWorld timePassed (Universe world' graphics)
+            Nothing -> return $ updateWorld timePassed (Universe world graphics)
+                
+
     -- | Modify variable which is used to notify server about our player movements
-    atomically $ writeTVar ourInfo newWorld
+    atomically $ writeTChan ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
-    return (Universe newWorld newGraphics)
+    return (Universe newWorld{_myProjectiles = []} newGraphics)
+
     
