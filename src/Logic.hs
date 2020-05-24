@@ -58,7 +58,7 @@ updateMyPlayer  timePassed u@(Universe world graphics) = Universe newWorld newGr
             myPlayer . entityData . currentState .= newState
             myPlayer . direction %= getNewDirection keyboard
 
-            projectiles %=
+            myProjectiles %=
                 (\oldProjectiles ->
                     if willShoot then createBullet newPlayer : oldProjectiles else oldProjectiles
                 )
