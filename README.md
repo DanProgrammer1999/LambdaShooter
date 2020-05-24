@@ -14,17 +14,19 @@ To launch a server, first you need to  update the `defaultIP` in the `src/Consta
 After the server is ready, you can launch a client. For that, use `stack run client <username>` from the project root directory (username is optional, if you do not provide it you will be assigned a default name). Enjoy the game!
 
 ## How it all works
-
+In this section we describe demo.
+Note: In master we use Universe instead of world which containts both graphics and world itself. By extracting all graphics(Picture,Animations) from `World`, we achieved easy serialization of `World` and all of its components. In addition we use `TChan`s instead of `TVar`s.
+`
 ### Server
 
 Well, the most recent version uses these important types:
-- `type Client      = (ID, WS.Connection)`
+- `type Client     = (ID, WS.Connection)`
 - `type ServerState = (World, [Client])`
 
-On a server we keep only one world which is to be trated as the most "recent" & "trustful".
-From each client we create a separate thread which waits for client World and merges it with our one.
+On a server we keep only one world version which is to be trated as the most "recent" & "trustful".
+For each client we create a separate thread which waits for client World and merges it with our one.
 Then all the changes are broadcasted to all Clients so that they get the most recent changes and game looks as smooth as possible.
-Server is also resposible for calculation the collision between player and projectiles, do damage to players and change their statistics.
+Server is also resposible for calculation the collision between player and projectiles, do damage, kill and respawn players and change their statistics.
 
 ### Client
 
@@ -40,7 +42,7 @@ On the other hand, we were able to automate a very tedious and boring task in a 
 
 The next function, `handleInputIO`, is the simplest of the three. Because Gloss sends input events *only* if there was some input (e.g. if user presses a button, it will only tell that the press occured, and will not send events while the key is down), we added `KeyboardData` to store the state of tracked buttons (space, a, d, and left mouse button). So the only job of `handleInput` is to update this data accordingly to the events (and `handleInputIO` is just a wrapped `handleInput`). 
 
--- TODO
+Finally, `updateWorldIO` function receive server updates from thread using `TVar[ClientInfo]`, merge world with the new received one and apply pure `updateWorld`. Finally, it saves the updated world to another `Tvar ClientInfo` and return our new world.
 
 
 ## Results: What is Working
@@ -49,9 +51,20 @@ We implemented most of what we planned. Some notable features include:
 - collision detection (players and map, players and bullets)
 - custom textures and animations
 - multiplayer (client and server standalone programs)
-- killing other players, falling to death and respawning
-- statistics of deaths and kills
 - levels depending on the statistics which increase the bullets power
 - etc.
 
+## Results: What is not Working
+
+We didn't manage to finish:
+- killing other players, falling to death and respawning
+- statistics of deaths and kills
+
+All of this implemented in master, which currently have big issues with perfomance due to last switches to `TChans`.
+
+## What can be improved
+
+It would be nice to fix perfomance issues on master. I believe big issues came from saving each frame to a `TChan` which is unbounded queue because `TVars` was nice in term of perfomance. First, it is good idea to communicate using more lightweight structure rather than` World`. Second, maybe instead of sending each frame we should accumulate world changes and send them pereodically (every 30 ms for example), not each frame. Also, would be nice to track current animation frame of each player Entity. So that we can play reasonable animation of all clients.
+
+## How it looks like now
 ![InGame picture](docs/supreme.png)
