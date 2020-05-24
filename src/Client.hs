@@ -54,7 +54,7 @@ app name conn  = do
     let uniqueID = read $ Data.Text.unpack uniqueIDMsg :: ID
     print $ show uniqueID ++ " <--  that is uniqueID i received from the server."
     -- | Creates player & world
-    let world = sampleWorld uniqueID name (RectangleBox 40 80)
+    let world = sampleWorld uniqueID name
     -- | Send our Player Info (first and last time we send Player)
     WS.sendTextData conn (encode $ _myPlayer world)
     -- | Treat TVars for communication

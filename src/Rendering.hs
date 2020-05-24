@@ -91,7 +91,14 @@ renderMap graphics m = (graphics ^. backgroundPicture) <> mconcat blocksPics
         blocksPics = map (renderBlock graphics) (m ^. blocks)
 
 renderBlock :: GameGraphics -> Block -> Picture
-renderBlock graphics b = uncurry translate (b ^. blockPosition) (graphics ^. blockPicture)
+renderBlock graphics b 
+    = uncurry translate (b ^. blockPosition) scaledBlock where
+        scaledBlock = scale xScale yScale (graphics ^. blockPicture)
+        (textureWidth, textureHeight) = blockTextureSize
+        width  = b ^. blockWidth
+        height = b ^. blockHeight
+        xScale = width  / textureWidth
+        yScale = height / textureHeight 
 
 renderHealthBar :: Health -> Picture
 renderHealthBar playerHealth = healthContainer <> remainingBar

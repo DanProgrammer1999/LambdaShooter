@@ -88,13 +88,12 @@ loadGameGraphics = do
     bg               <- loadBackgroundPicture
     bullet           <- loadBulletPicture
     block            <- loadBlockPicture 
-    let gameGraphics = GameGraphics {
+    return GameGraphics {
         _playerAnimations  = playerAnimations,
         _backgroundPicture = bg,
         _bulletPicture     = bullet,
         _blockPicture      = block
         }
-    return gameGraphics
 
 loadPlayerAnimations :: IO PlayerAnimationTable
 loadPlayerAnimations = do

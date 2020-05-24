@@ -31,7 +31,7 @@ type ServerState = (World, [Client])
 
 newServerState :: ServerState
 newServerState = (serverWorld, []) where
-    serverWorld = sampleWorld (-100500) "ServerSamplePlayer" (CircleBox 20)
+    serverWorld = sampleWorld (-100500) "ServerSamplePlayer"
 
 -- clientExists :: Client -> ServerState -> Bool
 -- clientExists client = any ((== fst client) . snd)
