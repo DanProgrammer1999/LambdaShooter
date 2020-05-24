@@ -32,9 +32,7 @@ receiveInfoFromServer conn otherInfo = forever $ do
     serverInfoMsg <- WS.receiveData conn
     let serverInfo = decode serverInfoMsg :: Maybe World
     case serverInfo of
-       
-        Just info -> do
-            putStrLn "Client: Got info from Server"
+        Just info -> 
             atomically $ writeTVar otherInfo info
         Nothing   -> do
             putStrLn "Client: Got Nothing from server (probably bad decode)."
@@ -111,5 +109,5 @@ updateWorldIO myPlayerID otherInfo ourInfo timePassed (Universe world graphics) 
     -- | Modify variable which is used to notify server about our player movements
     atomically $ writeTVar ourInfo newWorld
     -- | Clear our projectiles after we have sent them to server 
-    return (Universe newWorld{_myProjectiles = []} graphics)
+    return (Universe newWorld{_myProjectiles = []} newGraphics)
     
