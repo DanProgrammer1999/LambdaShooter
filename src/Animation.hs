@@ -111,7 +111,7 @@ loadBackgroundPicture :: IO Picture
 loadBackgroundPicture = loadPicture "resources/background.png"
  
 loadBulletPicture :: IO Picture
-loadBulletPicture = return $ color black $ circleSolid 5
+loadBulletPicture = return $ color black $ circleSolid 20
 
 loadBlockPicture :: IO Picture
 loadBlockPicture = loadPicture "resources/block.png"

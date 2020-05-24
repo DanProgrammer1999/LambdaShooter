@@ -45,9 +45,6 @@ jumpAcceleration = 1000
 defaultPosition :: (Float, Float)
 defaultPosition = (0,0)
 
-defaultHP :: Float
-defaultHP = 100
-
 -- | Very small velocity which is considered 0
 stopVelocity :: Float 
 stopVelocity = 1

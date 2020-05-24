@@ -1,4 +1,4 @@
-module Logic (handleInput, updateWorld, checkEntityCollision) where
+module Logic where
 
 import Control.Lens
 import Data.Maybe
@@ -11,7 +11,7 @@ import Graphics.Gloss.Data.Vector
 
 import CommonData
 import Constants
-import Constructors (makeBullet)
+import Constructors (makeBullet, playerStatistics)
 import Animation
 import Physics
 
@@ -84,6 +84,28 @@ updateMyPlayer  timePassed u@(Universe world graphics) = Universe newWorld newGr
         
         newState = if willShoot then Shooting else getNewState newPlayer
         newAnimations = getNewPlayerAnimations graphics timePassed newPlayer (newState /= oldState)
+
+damagePlayer :: Entity -> Float -> Entity
+damagePlayer entity@(Entity id body eData dir) dmg 
+    = entity & entityData .~ eDataUpdated
+    where
+        newHealth = fromMaybe 0 (eData ^? health) - dmg
+        oldState = fromMaybe Idle $ eData ^? currentState
+        newState = if newHealth <= 0 then Dying else oldState
+        eDataUpdated = eData &~ do
+            health       .= newHealth
+            currentState .= newState
+
+        oldStatistics = fromMaybe playerStatistics $ eData ^? statistics
+        oldDeaths     = oldStatistics ^. deaths
+
+killIfOutOfWorld :: Entity -> Entity
+killIfOutOfWorld player 
+    | abs x > worldBoundary 
+        || abs y > worldBoundary = damagePlayer player (maxHealth + 1) 
+    | otherwise = player
+    where 
+        (x, y) = player ^. entityBody . bodyPosition
 
 createBullet :: Entity -> Entity
 createBullet player = makeBullet bulletPower bulletPosition (player ^. direction) playerID

@@ -68,29 +68,17 @@ updateFromClientWorld clientWorld (oldWorld, clients) = return (newWorld,clients
         projectiles .= (clientWorld  ^. myProjectiles) ++ (oldWorld ^. projectiles)
         players .= newPlayers
 
-doDamage :: Entity -> Float -> Entity
-doDamage e@(Entity id body eData dir) dmg = e & entityData .~ eDataUpdated
-    where
-        newHealth = fromMaybe 0 (eData ^? health) - dmg
-        oldState = fromMaybe Idle $ eData ^? currentState
-        newState = if newHealth <= 0 then Dying else oldState
-        eDataUpdated = eData &~ do
-            health       .= newHealth
-            currentState .= newState
-            statistics   .= newStatistics
-
-        oldStatistics = fromMaybe playerStatistics $ eData ^? statistics
-        oldDeaths     = oldStatistics ^. deaths
-        toAddDeaths   = if newHealth <= 0 then 1 else 0
-        newStatistics = oldStatistics & deaths +~ toAddDeaths
-
 makeAliveIfNeed :: Entity -> Entity
-makeAliveIfNeed e@(Entity id body eData dir) = newEntity where
-    newEntity = if _currentState eData == Dying then
-        e{_entityData = eDataUpdated, _entityBody = bodyUpdated}
-        else e
-    eDataUpdated = eData{_currentState = Falling, _health = defaultHP}
-    bodyUpdated  = body {_bodyPosition = defaultPosition}
+makeAliveIfNeed entity@(Entity id body eData dir) = newEntity where
+    newEntity = 
+        if   fromMaybe Idle (eData ^? currentState) == Dying 
+        then entity & entityData .~ eDataUpdated 
+                    & entityBody .~ bodyUpdated
+        else entity
+    eDataUpdated = eData & currentState .~ Falling 
+                         & health .~ maxHealth
+                         & statistics . deaths +~ 1
+    bodyUpdated  = body & bodyPosition .~ defaultPosition
 
 -- | Update kills statistic given the ids of killers
 updateKillsStatistic :: [Entity] -> [ID] -> [Entity]
@@ -114,12 +102,10 @@ updateServerWorld oldWorld@(World wMap allProjectiles _ allPlayers _ _ _)
     collidedProjectiles =
          filter (detectEntitiesCollision allPlayers . view entityBody) allProjectiles
     checkHit = map damageIfHit allPlayers
-    newPlayers = map (makeAliveIfNeed . fst) checkHit
+    newPlayers = map (makeAliveIfNeed . killIfOutOfWorld . fst) checkHit
     killingIds = mconcat $ map (fromMaybe [] . snd) checkHit
 
     rewardedPlayers = updateKillsStatistic newPlayers killingIds
-
-    newWorld = oldWorld{_players = newPlayers, _projectiles = freeProjectiles}
 
     damageIfHit :: Entity -> (Entity, Maybe [ID])
     damageIfHit aPlayer
@@ -130,7 +116,7 @@ updateServerWorld oldWorld@(World wMap allProjectiles _ allPlayers _ _ _)
             bulletPower = fromMaybe baseBulletPower . preview (entityData . projectilePower)
             damage
                 = sum (map bulletPower hitBullets)
-            damagedPlayer = doDamage aPlayer damage
+            damagedPlayer = damagePlayer aPlayer damage
             killingIds =
                 if fromMaybe 0 (damagedPlayer ^? entityData . health) <= 0
                 then Just (map (view entityID) hitBullets)

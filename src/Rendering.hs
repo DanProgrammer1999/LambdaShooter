@@ -31,18 +31,19 @@ renderEntities graphics entities = mconcat pictures  where
 --   TODO make scale on load, not every frame.
 -- | Render all Entities. Also translates and flip accordingly. 
 entityToPicture :: GameGraphics -> Entity -> Picture
-entityToPicture graphics entity = scaledAndTranslatedPic where
-    position = entity ^. entityBody . bodyPosition
-    playerPic = getPlayerPicture graphics entity
-    
-    scaledPic = scale entitiesScale entitiesScale playerPic
-    scaledAndTranslatedPic =
-        uncurry translate position scaledPic
+entityToPicture graphics entity = scaledAndTranslatedPic 
+    where
+        position = entity ^. entityBody . bodyPosition
+        playerPic = getPlayerPicture graphics entity
+        
+        scaledPic = scale entitiesScale entitiesScale playerPic
+        scaledAndTranslatedPic =
+            uncurry translate position scaledPic
 
-    getRightPic :: Entity -> Picture
-    getRightPic entity 
-        | isPlayer entity     = getPlayerPicture graphics entity
-        | isProjectile entity = graphics ^. bulletPicture 
+        getRightPic :: Entity -> Picture
+        getRightPic entity 
+            | isPlayer entity     = getPlayerPicture graphics entity
+            | isProjectile entity = graphics ^. bulletPicture 
 
 
 getPlayerPicture :: GameGraphics -> Entity -> Picture
