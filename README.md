@@ -2,6 +2,9 @@
 
 This simple game is a semester project for Haskell elective course. It is written in pure Haskell using Gloss for graphics, JuicyPixels for loading custom textures, and some other packages (list will be provided later). 
 
+## How it looks like now
+![InGame picture](docs/supreme.png)
+
 ## Game description 
 
 This is an online game with client and server parts. You control a penguin in an all-against-all combat. Earn levels to increase the damage of your weapon. Die, and you loose a level. Fall or catch a fatal bullet, and you die. The rules are very simple. Can you survive and reach the highest level?
@@ -66,5 +69,4 @@ All of this implemented in master, which currently have big issues with perfoman
 
 It would be nice to fix perfomance issues on master. I believe big issues came from saving each frame to a `TChan` which is unbounded queue because `TVars` was nice in term of perfomance. First, it is good idea to communicate using more lightweight structure rather than` World`. Second, maybe instead of sending each frame we should accumulate world changes and send them pereodically (every 30 ms for example), not each frame. Also, would be nice to track current animation frame of each player Entity. So that we can play reasonable animation of all clients.
 
-## How it looks like now
-![InGame picture](docs/supreme.png)
+
